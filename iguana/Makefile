@@ -6,7 +6,7 @@ LDFLAGS=-g -lnanomsg -lcurl -lssl -lcrypto -lpthread -lz -lm -lsodium
 
 TESTIPADDR=\"78.47.196.146\"
 
-all: ../agents iguana
+all: iguana
 
 clean:
 	$(RM) iguana
@@ -17,9 +17,6 @@ clean:
 	$(RM) *.a
 	$(MAKE) -C secp256k1 clean
 	$(MAKE) -C crypto777 clean
-
-../agents:
-	mkdir $@
 
 secp256k1/secp256k1.a:
 	$(MAKE) -C secp256k1 all

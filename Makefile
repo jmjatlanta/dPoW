@@ -10,11 +10,15 @@ $(INSTALLDIR):
 $(INSTALLDIR)/coins:
 	mkdir $@
 
+agents:
+	mkdir $@
+
 clean:
 	$(MAKE) -C iguana clean
 	$(RM) -Rf $(INSTALLDIR)
 
-install: $(INSTALLDIR) \
+install: agents \
+		$(INSTALLDIR) \
 		$(INSTALLDIR)/coins \
 		all \
 		iguana/iguana
