@@ -1,1 +1,2 @@
+# I tried to migrate this into the iguana Makefile, but was unsuccessful - JMJ 24-Jun-2022
 gcc -g -o DEXstats -I../crypto777 exchanges/stats.c ../crypto777/cJSON.c ../agents/libcrypto777.a -lcurl -lpthread -lm

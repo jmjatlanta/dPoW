@@ -23,7 +23,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
-#include "../../crypto777/OS_portable.h"
+#include "../crypto777/OS_portable.h"
 #define IGUANA_MAXRPCTHREADS 1
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))

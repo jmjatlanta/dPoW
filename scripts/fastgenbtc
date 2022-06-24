@@ -1,0 +1,7 @@
+# This doesn't look like it is used anymore - JMJ 24-Jun-2022
+while true
+do
+iguana coins/genbtcfast.json
+sleep 3
+done
+

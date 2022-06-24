@@ -18,6 +18,7 @@ General [Setup instructions](https://docs.komodoplatform.com/notary/setup-Komodo
 ### Build instructions for NN operations:
 
 #### Build iguana for notary operations
+`make`
 `make install`
 
 #### Start main-net notarizations:

@@ -23,6 +23,15 @@ install: $(INSTALLDIR) \
 	cp $(SCRIPT_SRC)/m_notary_3rdparty $(INSTALLDIR)
 	cp $(SCRIPT_SRC)/add_coins $(INSTALLDIR)
 	cp $(SCRIPT_SRC)/dpowassets $(INSTALLDIR)
+	cp $(SCRIPT_SRC)/listassetchains $(INSTALLDIR)
+	cp $(SCRIPT_SRC)/assetchains.json $(INSTALLDIR)
+	cp $(SCRIPT_SRC)/listassetchainparams $(INSTALLDIR)
+	cp $(SCRIPT_SRC)/3rd_party $(INSTALLDIR)
+	cp $(SCRIPT_SRC)/notary.sh $(INSTALLDIR)
+	cp $(SCRIPT_SRC)/acsplit $(INSTALLDIR)
+	cp $(SCRIPT_SRC)/assets.sh $(INSTALLDIR)
+	cp $(SCRIPT_SRC)/btc_7776 $(INSTALLDIR)
+	cp $(SCRIPT_SRC)/elected $(INSTALLDIR)
 	cp $(SCRIPT_SRC)/coins/chips_7779 $(INSTALLDIR)/coins	
 	cp $(SCRIPT_SRC)/coins/emc2_7779 $(INSTALLDIR)/coins
 	cp $(SCRIPT_SRC)/coins/vrsc_7779 $(INSTALLDIR)/coins

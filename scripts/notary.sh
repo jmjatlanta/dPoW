@@ -13,14 +13,8 @@ case "$1" in
   ;;
 
   build_stage2)
-    rm -f ../agents/iguana *.o
-    cd secp256k1; ./m_unix; cd ..
-    cd ../crypto777; ./m_LP; cd ../iguana
-    #gcc -g -fno-aggressive-loop-optimizations -Wno-deprecated -c -O2 -DISNOTARYNODE=1 -DLIQUIDITY_PROVIDER=1 *.c ../basilisk/basilisk.c ../gecko/gecko.c ../datachain/datachain.c
-    clang -g -Wno-deprecated -c -O2 -DISNOTARYNODE=1 *.c ../basilisk/basilisk.c ../gecko/gecko.c ../datachain/datachain.c
-    #gcc -g -fno-aggressive-loop-optimizations -Wno-deprecated -c -DISNOTARYNODE=1 -DLIQUIDITY_PROVIDER=1  main.c iguana777.c iguana_bundles.c ../basilisk/basilisk.c
-    clang -g  -Wno-deprecated -c -DISNOTARYNODE=1 main.c iguana777.c iguana_bundles.c ../basilisk/basilisk.c
-    clang -g -o ../agents/iguana *.o ../agents/libcrypto777.a -lnanomsg -lcurl -lssl -lcrypto -lpthread -lz -lm -lsodium
+    make clean
+    make install
     echo ">>> Done building iguana <<<"
   ;;
 
@@ -34,7 +28,7 @@ case "$1" in
     # m_notary_KMD
     $cli_binary lockunspent true `$cli_binary listlockunspent | jq -c .`
 
-    stdbuf -oL $2 ../agents/iguana notary & #> iguana.log 2> error.log  &
+    stdbuf -oL $2 iguana notary & #> iguana.log 2> error.log  &
 
     sleep 4
     curl --url "http://127.0.0.1:7776" --data "{\"agent\":\"SuperNET\",\"method\":\"myipaddr\",\"ipaddr\":\"$myip\"}"
@@ -94,7 +88,7 @@ case "$1" in
     $cli_binary lockunspent true `$cli_binary listlockunspent | jq -c .`
 
     # Start 3rd party iguana, no split is default on this branch. This uses RPC port 7779, allows 2 iguana on same OS, incase OP does not have capacity to use 2 VM or 2 servers.
-    stdbuf -oL $2 ../agents/iguana 3rd_party & #> iguana.log 2> error.log  &
+    stdbuf -oL $2 iguana 3rd_party & #> iguana.log 2> error.log  &
 
     sleep 4
     curl --url "http://127.0.0.1:7779" --data "{\"agent\":\"SuperNET\",\"method\":\"myipaddr\",\"ipaddr\":\"$myip\"}"

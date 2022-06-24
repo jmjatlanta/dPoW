@@ -4,6 +4,8 @@ CFLAGS=-g -Wno-deprecated -O2 -DISNOTARYNODE=1 -Iincludes
 CFLAGS_NO_OPTIMIZATION=-Wno-deprecated -c -DISNOTARYNODE=1 -Iincludes
 LDFLAGS=-g -lnanomsg -lcurl -lssl -lcrypto -lpthread -lz -lm -lsodium
 
+TESTIPADDR=\"78.47.196.146\"
+
 all: ../agents iguana
 
 clean:
@@ -82,3 +84,14 @@ iguana: main.o \
 		secp256k1/secp256k1.a \
 		crypto777/libcrypto777.a
 	$(LD) $(LDFLAGS) -o $@ $^
+
+DEXstats: exchanges/stats.o \
+		crypto777/cJSON.o \
+		crypto777/libcrypto777.a \
+		crypto777/jpeg/libjpeg.a
+	$(LD) $(LDFLAGS) -o $@ $^
+
+iguana_test:
+	$(CC) -DNOTARY_TESTMODE=$(TESTIPADDR) -g -Wno-aggressive-loop-optimizations -Wno-deprecated -c -O2 -DLIQUIDITY_PROVIDER=1 -Iincludes *.c gecko/gecko.c datachain/datachain.c
+	$(CC) -DNOTARY_TESTMODE=$(TESTIPADDR) -g -Wno-aggressive-loop-optimizations -Wno-deprecated -c -DLIQUIDITY_PROVIDER=1 -Iincludes main.c iguana777.c iguana_bundles.c basilisk/basilisk.c iguana_ramchain.c
+	$(CC) -g -o $@ *.o ../agents/libcrypto777.a /usr/local/lib/libnanomsg.so -lcurl -lssl -lcrypto -lpthread -lz -lm -lsodium
