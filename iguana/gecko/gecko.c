@@ -33,7 +33,7 @@
 // code datachain
 //
 
-#include "../iguana/iguana777.h"
+#include "../iguana777.h"
 #include "gecko_delayedPoW.c"
 #include "gecko_headers.c"
 #include "gecko_mempool.c"

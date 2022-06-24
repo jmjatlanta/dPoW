@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-DLIQUIDITY_PROVIDER=1 -O2 -I/usr/lib/x86_64-linux-gnu/curl
+CFLAGS=-DLIQUIDITY_PROVIDER=1 -O2 -I/usr/include/x86_64-linux-gnu -I../includes
 
 all: jpeg/libjpeg.a libcrypto777.a
 

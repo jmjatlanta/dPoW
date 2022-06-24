@@ -71,12 +71,12 @@
 #define MIN(x, y) ( ((x)<(y))?(x):(y) )
 #endif
 
-#include "../includes/libgfshare.h"
-#include "../includes/utlist.h"
-#include "../includes/uthash.h"
-#include "../includes/curve25519.h"
-#include "../includes/cJSON.h"
-#include "../includes/tweetnacl.h"
+#include "libgfshare.h"
+#include "utlist.h"
+#include "uthash.h"
+#include "curve25519.h"
+#include "cJSON.h"
+#include "tweetnacl.h"
 
 #ifndef MAP_FILE
 #define MAP_FILE        0

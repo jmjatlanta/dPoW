@@ -13,8 +13,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#include "../iguana/iguana777.h"
-#include "../iguana/exchanges777.h"
+#include "../iguana777.h"
+#include "../exchanges777.h"
 
 typedef char *basilisk_servicefunc(struct supernet_info *myinfo,char *CMD,void *addr,char *remoteaddr,uint32_t basilisktag,cJSON *valsobj,uint8_t *data,int32_t datalen,bits256 hash,int32_t from_basilisk);
 

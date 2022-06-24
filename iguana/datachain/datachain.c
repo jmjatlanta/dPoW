@@ -13,7 +13,7 @@
  *                                                                            *
  ******************************************************************************/
 
-#include "../iguana/iguana777.h"
+#include "../iguana777.h"
 #include "datachain_events.c"
 
 uint32_t datachain_checkpoint(struct supernet_info *myinfo,struct iguana_info *coin,uint32_t lastcheckpoint,uint32_t timestamp,bits256 merkle,int32_t lastheight,bits256 lasthash2)

@@ -1,17 +1,20 @@
 CC=clang
 LD=clang
-CFLAGS=-g -Wno-deprecated -O2 -DISNOTARYNODE=1
-CFLAGS_NO_OPTIMIZATION=-Wno-deprecated -c -DISNOTARYNODE=1
+CFLAGS=-g -Wno-deprecated -O2 -DISNOTARYNODE=1 -Iincludes
+CFLAGS_NO_OPTIMIZATION=-Wno-deprecated -c -DISNOTARYNODE=1 -Iincludes
 LDFLAGS=-g -lnanomsg -lcurl -lssl -lcrypto -lpthread -lz -lm -lsodium
 
 all: ../agents ../agents/iguana
 
 clean:
 	$(RM) ../agents/iguana
+	$(RM) gecko/*.o
+	$(RM) datachain/*.o
+	$(RM) basilisk/*.o
 	$(RM) *.o
 	$(RM) *.a
 	$(MAKE) -C secp256k1 clean
-	$(MAKE) -C ../crypto777 clean
+	$(MAKE) -C crypto777 clean
 
 ../agents:
 	mkdir $@
@@ -19,12 +22,12 @@ clean:
 secp256k1/secp256k1.a:
 	$(MAKE) -C secp256k1 all
 
-../crypto777/libcrypto777.a:
-	$(MAKE) -C ../crypto777 all
+crypto777/libcrypto777.a:
+	$(MAKE) -C crypto777 all
 
 optimized.a: \
-		../gecko/gecko.o \
-		../datachain/datachain.o \
+		gecko/gecko.o \
+		datachain/datachain.o \
 		iguana_accept.o \
 		iguana_bitmap.o \
 		iguana_blocks.o \
@@ -68,14 +71,14 @@ iguana777.o: iguana777.c
 iguana_bundles.o: iguana_bundles.c
 	$(CC) $(CFLAGS_NO_OPTIMIZATION) -c -o $@ $^
 
-../basilisk/basilisk.o: ../basilisk/basilisk.c
+basilisk/basilisk.o: basilisk/basilisk.c
 	$(CC) $(CFLAGS_NO_OPTIMIZATION) -c -o $@ $^
 
 ../agents/iguana: main.o \
 		iguana777.o \
 		iguana_bundles.o \
-		../basilisk/basilisk.o \
+		basilisk/basilisk.o \
 		optimized.a \
 		secp256k1/secp256k1.a \
-		../crypto777/libcrypto777.a
+		crypto777/libcrypto777.a
 	$(LD) $(LDFLAGS) -o $@ $^

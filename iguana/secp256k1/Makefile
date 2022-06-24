@@ -12,5 +12,6 @@ secp256k1.a: src/secp256k1.o
 clean:
 	$(RM) *.a
 	$(RM) src/*.o
+	$(RM) *.o
 
 .PHONY: all

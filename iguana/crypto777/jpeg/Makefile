@@ -56,4 +56,5 @@ libjpeg.a: unix/jmemname.o \
 
 clean:
 	$(RM) *.o
+	$(RM) unix/*.o
 	$(RM) libjpeg.a

@@ -306,7 +306,7 @@ int md5_done(hash_state * md, unsigned char *out)
 }
 
 #include "../OS_portable.h"
-#include "../../includes/curve25519.h"
+#include "curve25519.h"
 bits128 calc_md5(char digeststr[33],void *buf,int32_t len)
 {
     int32_t init_hexbytes_noT(char *hexbytes,unsigned char *message,long len);
