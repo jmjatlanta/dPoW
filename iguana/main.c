@@ -21,7 +21,7 @@
 #define CHROMEAPP_HANDLER Handler_iguana
 #define ACTIVELY_DECLARE
 #define HAVE_STRUCT_TIMESPEC
-#include "../pnacl_main.h"
+#include "pnacl_main.h"
 #include "iguana777.h"
 
 
