@@ -1198,7 +1198,6 @@ STRING_ARG(dex,psock,argstr)
 STRING_ARG(dex,getnotaries,symbol)
 {
     return(clonestr("{\"error\":\"dexgetnotaries deprecated\"}"));
-    //return(_dex_getnotaries(myinfo,symbol));
 }
 
 TWO_STRINGS(dex,kvsearch,symbol,key)

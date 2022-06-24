@@ -94,53 +94,11 @@ long myallocated(uint8_t type,long change)
 
 void *mycalloc(uint8_t type,int32_t n,long itemsize)
 {
-#ifdef USE_MYCALLOC
-    //static portable_mutex_t MEMmutex;
-    struct allocitem *item; int64_t allocsize = ((uint64_t)n * itemsize);
-    if ( type == 0 && n == 0 && itemsize == 0 )
-    {
-        //portable_mutex_init(&MEMmutex);
-        myfree(mycalloc('t',1024,1024 * 32),1024*1024*32);
-        return(0);
-    }
-    //portable_mutex_lock(&MEMmutex);
-    myallocated(type,allocsize);
-    while ( (item= calloc(1,sizeof(struct allocitem) + allocsize + 16)) == 0 )
-    {
-        char str[65];
-        printf("mycalloc.%c: need to wait for memory.(%d,%ld) %s to be available\n",type,n,itemsize,mbstr(str,allocsize));
-        sleep(1);
-    }
-    //printf("calloc origptr.%p retptr.%p size.%ld\n",item,(void *)(long)item + sizeof(*item),allocsize);
-    item->allocsize = (uint32_t)allocsize;
-    item->type = type;
-    //portable_mutex_unlock(&MEMmutex);
-    return((void *)((long)item + sizeof(*item)));
-#else
     return(calloc(n,itemsize));
-#endif
 }
 
 struct queueitem *queueitem(char *str)
 {
-    /*struct queueitem *item; int32_t n,allocsize; char *data; uint8_t type = 'y';
-     //portable_mutex_lock(&MEMmutex);
-     n = (uint32_t)strlen(str) + 1;
-     allocsize = (uint32_t)(sizeof(struct queueitem) + n);
-     myallocated(type,allocsize);
-     while ( (item= calloc(1,allocsize)) == 0 )
-     {
-     char str[65];
-     printf("queueitem: need to wait for memory.(%d,%ld) %s to be available\n",n,(long)sizeof(*item),mbstr(str,allocsize));
-     sleep(1);
-     }
-     item->allocsize = (uint32_t)allocsize;
-     item->type = type;
-     data = (void *)(long)((long)item + sizeof(*item));
-     memcpy(data,str,n);
-     //printf("(%c) queueitem.%p itemdata.%p n.%d allocsize.%d\n",type,item,data,n,allocsize);
-     //portable_mutex_unlock(&MEMmutex);
-     return(data);*/
     struct stritem *sitem; int32_t len;
     len = (int32_t)strlen(str);
     sitem = calloc(1,sizeof(*sitem) + len + 16);
@@ -148,59 +106,6 @@ struct queueitem *queueitem(char *str)
     return(&sitem->DL);
 }
 
-#ifdef USE_MYCALLOC
-void _myfree(uint8_t type,int32_t origallocsize,void *origptr,int32_t allocsize)
-{
-    //portable_mutex_lock(&MEMmutex);
-    if ( allocsize == origallocsize )
-    {
-        myallocated(type,-allocsize);
-        // Type_allocated[type & 0xff] -= allocsize;
-        // Total_allocated -= allocsize;
-        //printf("myfree.%p size.%d %d type %x\n",origptr,allocsize,origallocsize,type);
-        free(origptr);
-    }
-    else
-    {
-        printf("myfree size error %d vs %d at %p\n",allocsize,origallocsize,origptr);
-        static int32_t y,z;
-        printf("div by zero! %d\n",y/z);
-        getchar();
-    }
-    //portable_mutex_unlock(&MEMmutex);
-}
-
-void myfree(void *_ptr,long allocsize)
-{
-    struct allocitem *item = (void *)((long)_ptr - sizeof(struct allocitem));
-    if  ( allocsize == 0 )
-    {
-        printf("myfree zero allocsize %p?\n",_ptr);
-        return;
-    }
-    _myfree(item->type,item->allocsize,item,(uint32_t)allocsize);
-}
-
-/*void free_queueitem(void *itemdata)
- {
- struct queueitem *item = (void *)((long)itemdata - sizeof(struct queueitem));
- //printf("freeq item.%p itemdata.%p size.%d\n",item,itemdata,item->allocsize);
- _myfree(item->type,item->allocsize,item,item->allocsize);
- }*/
-
-void *myrealloc(uint8_t type,void *oldptr,long oldsize,long newsize)
-{
-    void *newptr;
-    newptr = mycalloc(type,1,newsize);
-    //printf("newptr.%p type.%c oldsize.%ld newsize.%ld\n",newptr,type,oldsize,newsize);
-    if ( oldptr != 0 )
-    {
-        memcpy(newptr,oldptr,oldsize < newsize ? oldsize : newsize);
-        myfree(oldptr,oldsize);
-    }
-    return(newptr);
-}
-#else
 void myfree(void *_ptr,long allocsize)
 {
     free(_ptr);
@@ -210,7 +115,6 @@ void *myrealloc(uint8_t type,void *oldptr,long oldsize,long newsize)
 {
     return(realloc(oldptr,newsize));
 }
-#endif
 
 static uint64_t _align16(uint64_t ptrval) { if ( (ptrval & 15) != 0 ) ptrval += 16 - (ptrval & 15); return(ptrval); }
 
@@ -918,16 +822,6 @@ void *OS_mapfile(char *fname,long *filesizep,int32_t enablewrite) // win and pna
 	return(OS_portable_mapfile(fname,filesizep,enablewrite));
 }
 
-/*int32_t OS_syncmap(struct OS_mappedptr *mp,long len) // pnacl doesnt implement sync
- {
- return(OS_portable_syncmap(mp,len));
- }
- 
- void *OS_tmpalloc(char *dirname,char *name,struct OS_memspace *mem,long origsize) // no syncmap no tmpalloc
- {
- return(OS_portable_tmpalloc(dirname,name,mem,origsize));
- }*/
-
 void OS_init()
 {
     extern bits256 GENESIS_PUBKEY,GENESIS_PRIVKEY;
@@ -975,26 +869,44 @@ int32_t OS_getline(int32_t waitflag,char *line,int32_t max,char *dispstr)
 }
 
 
-//////////// test suite for:
-/*
- int64_t OS_filesize(char *fname);
- void OS_ensure_directory(char *dirname);
- long OS_ensurefilesize(char *fname,long filesize,int32_t truncateflag);
- int32_t OS_truncate(char *fname,long filesize);
- int32_t OS_renamefile(char *fname,char *newfname);
- int32_t OS_removefile(char *fname,int32_t scrubflag);
- 
- void *OS_mapfile(char *fname,long *filesizep,int32_t enablewrite);
- int32_t OS_releasemap(void *ptr,uint64_t filesize);
- 
- double OS_milliseconds();
- void OS_randombytes(uint8_t *x,long xlen);
+/**
+ * @brief Test suite for:
+ * int64_t OS_filesize(char *fname);
+ * void OS_ensure_directory(char *dirname);
+ * long OS_ensurefilesize(char *fname,long filesize,int32_t truncateflag);
+ * int32_t OS_truncate(char *fname,long filesize);
+ * int32_t OS_renamefile(char *fname,char *newfname);
+ * int32_t OS_removefile(char *fname,int32_t scrubflag);
+ * void *OS_mapfile(char *fname,long *filesizep,int32_t enablewrite);
+ * int32_t OS_releasemap(void *ptr,uint64_t filesize);
+ * double OS_milliseconds();
+ * void OS_randombytes(uint8_t *x,long xlen);
+ * @return number of tests that failed as a negative number
  */
-
 int32_t iguana_OStests()
 {
     static uint16_t pairs[0x100][0x100],mappairs[0x100][0x100];
-    uint8_t buf[4096],*bufptr; int32_t val,min,minij,maxij,max,i,j,histo[0x100],retval = 0,n=0; double startmilli,endmilli; FILE *fp; char *name,*name2,*dirname; long filesize; void *fileptr;
+    uint8_t buf[4096];
+    uint8_t *bufptr; 
+    int32_t val;
+    int32_t min;
+    int32_t minij;
+    int32_t maxij;
+    int32_t max;
+    int32_t i;
+    int32_t j;
+    int32_t histo[0x100];
+    int32_t retval = 0;
+    int32_t n=0; 
+    double startmilli;
+    double endmilli; 
+    FILE *fp; 
+    char *name;
+    char *name2;
+    char *dirname; 
+    long filesize; 
+    void *fileptr;
+
     startmilli = OS_milliseconds();
     printf("\n>>>>>>>>>> starting tests. Please count the seconds (or use stopwatch)\n");
     name = "OStests";
@@ -1021,13 +933,15 @@ int32_t iguana_OStests()
     fclose(fp);
     printf("\nend of random bytes\n\n");
     if ( OS_filesize(name) != n )
-        printf("FAIL OS_filesize %lld != %d error and if OS_filesize doesnt work, nothing else will work\n",(long long)OS_filesize(name),n), retval--;
+        printf("FAIL OS_filesize %lld != %d error and if OS_filesize doesnt work, nothing else will work\n",
+                (long long)OS_filesize(name),n), retval--;
     else
     {
         printf("PASS OS_filesize.(%s) matches %d\n",name,n);
         OS_renamefile(name,name2);
         if ( OS_filesize(name2) != n )
-            printf("FAIL OS_renamefile returns filesize %lld != %d\n",(long long)OS_filesize(name2),n), retval--;
+            printf("FAIL OS_renamefile returns filesize %lld != %d\n",
+                    (long long)OS_filesize(name2),n), retval--;
         else printf("PASS OS_renamefile (%s) -> (%s) worked\n",name,name2);
         if ( (fileptr= OS_mapfile(name2,&filesize,0)) == 0 )
             printf("FAIL OS_mapfile.(%s) returns null\n",name2), retval--;
@@ -1044,8 +958,10 @@ int32_t iguana_OStests()
                     mappairs[buf[j-1]][buf[j]]++;
             }
             if ( memcmp(pairs,mappairs,sizeof(pairs)) != 0 )
-                printf("FAIL OS_mapfile.(%s) %ld data error pairs[][] != mappairs[][]\n",name2,filesize), retval--;
-            else printf("PASS OS_mapfile.(%s) %ld regenerated identical pairs[][]\n",name2,filesize);
+                printf("FAIL OS_mapfile.(%s) %ld data error pairs[][] != mappairs[][]\n",
+                        name2,filesize), retval--;
+            else 
+                printf("PASS OS_mapfile.(%s) %ld regenerated identical pairs[][]\n",name2,filesize);
             if ( OS_releasemap(fileptr,filesize) != 0 )
                 printf("FAIL OS_releasemap.(%s) %ld returns error\n",name2,filesize), retval--;
             else printf("PASS OS_releasemap.(%s) %ld returns success\n",name2,filesize);
@@ -1075,6 +991,8 @@ int32_t iguana_OStests()
         }
     }
     endmilli = OS_milliseconds();
-    printf("\n\nDid that take %.3f seconds? If not, there is a problem with OS_milliseconds\n\nMake sure above numbers look random and the min/max are within specified range:\n<3%% %.2f%% min %d max %d | <75%% %.3f%% minij %d maxij %d\n",(endmilli - startmilli)/1000.,100*(double)max/min - 100.,min,max,100*(double)maxij/minij - 100.,minij,maxij);
-    return(retval);
+    printf("\n\nDid that take %.3f seconds? If not, there is a problem with OS_milliseconds\n\nMake sure above numbers look random and the min/max are within specified range:\n<3%% %.2f%% min %d max %d | <75%% %.3f%% minij %d maxij %d\n",
+            (endmilli - startmilli)/1000.,100*(double)max/min - 100.,min,max,100*(double)maxij/minij - 100.,
+            minij,maxij);
+    return retval;
 }

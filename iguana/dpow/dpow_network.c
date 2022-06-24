@@ -1001,42 +1001,6 @@ int32_t _dex_getheight(struct supernet_info *myinfo,char *symbol)
     return(height);
 }
 
-/*char *_dex_getnotaries(struct supernet_info *myinfo,char *symbol)
-{
-    struct dex_request dexreq; char *retstr,*pubkeystr; cJSON *retjson,*array,*item; int32_t i,n;
-    memset(&dexreq,0,sizeof(dexreq));
-    safecopy(dexreq.name,symbol,sizeof(dexreq.name));
-    dexreq.func = 'N';
-    dexreq.intarg = -1;
-    if ( (retstr= _dex_sendrequest(myinfo,&dexreq,1,"")) != 0 )
-    {
-        if ( myinfo->numnotaries <= 0 && (retjson= cJSON_Parse(retstr)) != 0 )
-        {
-            if ( (myinfo->numnotaries= jint(retjson,"numnotaries")) != 0 && (array= jarray(&n,retjson,"notaries")) != 0 && n == myinfo->numnotaries )
-            {
-                for (i=0; i<n; i++)
-                {
-                    item = jitem(array,i);
-                    if ( (pubkeystr= jstr(item,"pubkey")) != 0 && strlen(pubkeystr) == 33*2 )
-                        decode_hex(myinfo->notaries[i],33,pubkeystr);
-                }
-            }
-            else
-            {
-                extern char *Notaries_elected[][2]; extern int32_t Notaries_num;
-                myinfo->numnotaries = Notaries_num;//sizeof(Notaries_elected)/sizeof(*Notaries_elected);
-                for (i=0; i<myinfo->numnotaries; i++)
-                {
-                    decode_hex(myinfo->notaries[i],33,(char *)Notaries_elected[i][1]);
-                }
-                printf("default to elected.%d\n",myinfo->numnotaries);
-            }
-            free_json(retjson);
-        }
-    }
-    return(retstr);
-}*/
-
 char *_dex_alladdresses(struct supernet_info *myinfo,char *symbol)
 {
     struct dex_request dexreq;

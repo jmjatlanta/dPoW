@@ -197,8 +197,6 @@ char *utc_str(char *str,uint32_t utc);
 double tai_diff(struct tai reftai,struct tai cmptai);
 uint32_t OS_conv_utime(char *utime);
 
-//int32_t msync(void *addr,size_t len,int32_t flags);
-
 #ifdef __PNACL
 int32_t OS_nonportable_syncmap(struct OS_mappedptr *mp,long len);
 void *OS_nonportable_tmpalloc(char *dirname,char *name,struct OS_memspace *mem,long origsize);
@@ -224,8 +222,6 @@ void OS_remove_directory(char *dirname);
 int32_t OS_portable_renamefile(char *fname,char *newfname);
 int32_t OS_portable_removefile(char *fname);
 void *OS_portable_mapfile(char *fname,long *filesizep,int32_t enablewrite);
-//int32_t OS_portable_syncmap(struct OS_mappedptr *mp,long len);
-//void *OS_portable_tmpalloc(char *dirname,char *name,struct OS_memspace *mem,long origsize);
 
 int32_t is_DST(int32_t datenum);
 int32_t extract_datenum(int32_t *yearp,int32_t *monthp,int32_t *dayp,int32_t datenum);
@@ -264,13 +260,16 @@ int32_t OS_releasemap(void *ptr,unsigned long filesize);
 double OS_milliseconds();
 void OS_randombytes(uint8_t *x,long xlen);
 
-//int32_t OS_syncmap(struct OS_mappedptr *mp,long len);
-//void *OS_tmpalloc(char *dirname,char *name,struct OS_memspace *mem,long origsize);
-
 long myallocated(uint8_t type,long change);
+/***
+ * @brief an attempted replacement for calloc
+ * @param type unused
+ * @param n number of items to allocate
+ * @param itemsize the size of an item
+ * @returns poiter to allocated memory (n*itemsize)
+ */
 void *mycalloc(uint8_t type,int32_t n,long itemsize);
 void myfree(void *_ptr,long allocsize);
-//void free_queueitem(void *itemdata);
 void *myrealloc(uint8_t type,void *oldptr,long oldsize,long newsize);
 void *myaligned_alloc(uint64_t allocsize);
 int32_t myaligned_free(void *ptr,long size);

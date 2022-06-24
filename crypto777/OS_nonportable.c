@@ -290,16 +290,6 @@ int _mprotect(void *addr, size_t len, int prot)
     return -1;
 }
 
-/*int msync(void *addr, size_t len, int flags)
-{
-    if (FlushViewOfFile(addr, len))
-        return 0;
-    
-    errno =  __map_mman_error(GetLastError(), EPERM);
-    
-    return -1;
-}*/
-
 int mlock(const void *addr, size_t len)
 {
     if (VirtualLock((LPVOID)addr, len))

@@ -212,7 +212,6 @@ char *_dex_listtransactions(struct supernet_info *myinfo,char *symbol,char *coin
 char *_dex_listtransactions2(struct supernet_info *myinfo,char *symbol,char *coinaddr,int32_t count,int32_t skip);
 char *_dex_alladdresses(struct supernet_info *myinfo,char *symbol);
 int32_t _dex_getheight(struct supernet_info *myinfo,char *symbol);
-char *_dex_getnotaries(struct supernet_info *myinfo,char *symbol);
 char *_dex_kvupdate(struct supernet_info *myinfo,char *symbol,char *key,char *value,int32_t flags);
 char *_dex_kvsearch(struct supernet_info *myinfo,char *symbol,char *key);
 char *_dex_psock(struct supernet_info *myinfo,char *jsonstr);

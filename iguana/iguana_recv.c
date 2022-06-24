@@ -2198,10 +2198,8 @@ int32_t iguana_pollQsPT(struct iguana_info *coin,struct iguana_peer *addr)
                         iguana_send(coin,addr,serialized,datalen);
                         addr->pendhdrs++;
                         flag++;
-                    } //else printf("skip hdrreq.%s m.%d z.%d bp.%p longest.%d queued.%d\n",hashstr,m,z,bp,bp->coin->longestchain,bp->queued);
+                    }
                 }
-                //free_queueitem(hashstr);
-                //return(flag);
             } else printf("datalen.%d from gethdrs\n",datalen);
             free(hashitem);
             hashstr = 0;

@@ -986,23 +986,6 @@ void basilisks_loop(void *arg)
     }
 }
 
-void basilisks_init(struct supernet_info *myinfo)
-{
-    iguana_initQ(&myinfo->p2pQ,"p2pQ");
-    iguana_initQ(&myinfo->msgQ,"messageQ");
-    portable_mutex_init(&myinfo->bu_mutex);
-    portable_mutex_init(&myinfo->allcoins_mutex);
-    portable_mutex_init(&myinfo->basilisk_mutex);
-    portable_mutex_init(&myinfo->smart_mutex);
-    portable_mutex_init(&myinfo->DEX_mutex);
-    portable_mutex_init(&myinfo->DEX_swapmutex);
-    portable_mutex_init(&myinfo->DEX_reqmutex);
-    portable_mutex_init(&myinfo->gecko_mutex);
-    portable_mutex_init(&myinfo->messagemutex);
-    myinfo->basilisks.launched = iguana_launch(iguana_coinfind("BTCD"),"basilisks_loop",basilisks_loop,myinfo,IGUANA_PERMTHREAD);
-    printf("Basilisk initialized\n");
-}
-
 #include "../includes/iguana_apidefs.h"
 #include "../includes/iguana_apideclares.h"
 #include "../includes/iguana_apideclares2.h"
