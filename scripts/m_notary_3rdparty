@@ -1,10 +1,13 @@
 #!/bin/bash
 # manually kill the iguana you need to restart first!
+
+cd "$(dirname "$0")"
+
 # unlock any locked utxos. This will unlock utxos for both pubkeys, need a filter for address to only unlock the pubkey you need to restart.
 komodo-cli lockunspent true $(komodo-cli listlockunspent | jq -c .)
 
 # Start 3rd party iguana, no split is default on this branch. This uses RPC port 7779, allows 2 iguana on same OS, incase OP does not have capacity to use 2 VM or 2 servers.
-stdbuf -oL $1 ../agents/iguana 3rd_party &#> iguana.log 2> error.log  &
+stdbuf -oL $1 iguana 3rd_party &#> iguana.log 2> error.log  &
 
 myip=$(curl -s4 checkip.amazonaws.com)
 source pubkey.txt

@@ -1,11 +1,13 @@
 #!/bin/bash
 # manually kill the iguana you need to restart first!
 
+cd "$(dirname "$0")"
+
 # unlock any locked utxos. This will unlock utxos for both iguans, need a filter for address to only unlock the pubkey you need to restart. 
 komodo-cli lockunspent true `komodo-cli listlockunspent | jq -c .` 
 
 # Start normally, no split is default on this branch. 
-stdbuf -oL $1 ../agents/iguana notary & #> iguana.log 2> error.log  &
+stdbuf -oL $1 iguana notary & #> iguana.log 2> error.log  &
 
 myip=`curl -s4 checkip.amazonaws.com`
 source pubkey.txt

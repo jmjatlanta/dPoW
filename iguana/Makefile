@@ -4,10 +4,10 @@ CFLAGS=-g -Wno-deprecated -O2 -DISNOTARYNODE=1 -Iincludes
 CFLAGS_NO_OPTIMIZATION=-Wno-deprecated -c -DISNOTARYNODE=1 -Iincludes
 LDFLAGS=-g -lnanomsg -lcurl -lssl -lcrypto -lpthread -lz -lm -lsodium
 
-all: ../agents ../agents/iguana
+all: ../agents iguana
 
 clean:
-	$(RM) ../agents/iguana
+	$(RM) iguana
 	$(RM) gecko/*.o
 	$(RM) datachain/*.o
 	$(RM) basilisk/*.o
@@ -74,7 +74,7 @@ iguana_bundles.o: iguana_bundles.c
 basilisk/basilisk.o: basilisk/basilisk.c
 	$(CC) $(CFLAGS_NO_OPTIMIZATION) -c -o $@ $^
 
-../agents/iguana: main.o \
+iguana: main.o \
 		iguana777.o \
 		iguana_bundles.o \
 		basilisk/basilisk.o \

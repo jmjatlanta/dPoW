@@ -11,7 +11,6 @@ Network Statistics | https://stats.kmd.io/
 
 ---
 
-
 ## Installation 
 
 General [Setup instructions](https://docs.komodoplatform.com/notary/setup-Komodo-Notary-Node.html#setup-komodo-notary-node)
@@ -19,21 +18,13 @@ General [Setup instructions](https://docs.komodoplatform.com/notary/setup-Komodo
 ### Build instructions for NN operations:
 
 #### Build iguana for notary operations
-`make`
-
-#### Move to where the scripts are:
-`cd iguana`
+`make install`
 
 #### Start main-net notarizations:
-`./m_notary_main`
+`./bin/m_notary_main`
 
 #### Start 3rd party notarizations:
-`./m_notary_3rdparty`
-
-
-###### To build and launch main-net notarizations in one step run `./m_notary`
-
-#
+`./bin/m_notary_3rdparty`
 
 **Please note: Automatic UTXO split is deactivated by default.**
 
