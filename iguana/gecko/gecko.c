@@ -127,9 +127,8 @@ void *category_subscribe(struct supernet_info *myinfo,bits256 chainhash,bits256 
     HASH_FIND(hh,Categories,chainhash.bytes,sizeof(chainhash),chain);
     if ( chain == 0 )
     {
-        chain = mycalloc('c',1,sizeof(*chain));
+        chain = calloc(1,sizeof(*chain));
         chain->hash = hash = chainhash;
-        //char str[65]; printf("ADD cat.(%s)\n",bits256_str(str,chainhash));
         HASH_ADD(hh,Categories,hash,sizeof(hash),chain);
     }
     if ( bits256_nonz(keyhash) > 0 && memcmp(GENESIS_PUBKEY.bytes,keyhash.bytes,sizeof(keyhash)) != 0 && chain != 0 )
@@ -137,9 +136,8 @@ void *category_subscribe(struct supernet_info *myinfo,bits256 chainhash,bits256 
         HASH_FIND(hh,chain->subchains,keyhash.bytes,sizeof(keyhash),subchain);
         if ( subchain == 0 )
         {
-            subchain = mycalloc('c',1,sizeof(*subchain));
+            subchain = calloc(1,sizeof(*subchain));
             subchain->hash = hash = keyhash;
-            //char str[65],str2[65]; printf("subadd.(%s) -> (%s)\n",bits256_str(str,keyhash),bits256_str(str2,chainhash));
             HASH_ADD(hh,chain->subchains,hash,sizeof(hash),subchain);
         }
     }

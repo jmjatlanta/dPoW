@@ -741,28 +741,6 @@ char *exchanges777_process(struct exchange_info *exchange,int32_t *retvalp,struc
     return(retstr);
 }
 
-/*void iguana_statemachineupdate(struct supernet_info *myinfo,struct exchange_info *exchange)
-{
-    int32_t timemod,modwidth = 10; struct iguana_info *coin; struct bitcoin_swapinfo *swap,*tmp; struct iguana_bundlereq *req;
-    timemod = time(NULL) % modwidth;
-    coin = iguana_coinfind("BTCD");
-    portable_mutex_lock(&exchange->mutexS);
-    DL_FOREACH_SAFE(exchange->statemachines,swap,tmp)
-    {
-        if ( swap->dead != 0 || swap->mine.dead != 0 || swap->other.dead != 0 )
-            DL_DELETE(exchange->statemachines,swap);
-        else if ( (swap->mine.orderid % modwidth) == timemod )
-            instantdex_statemachine_iter(myinfo,exchange,swap);
-    }
-    portable_mutex_unlock(&exchange->mutexS);
-    while ( (req= queue_dequeue(&exchange->recvQ,0)) != 0 )
-    {
-        if ( instantdex_recvquotes(coin,req,req->hashes,req->n) != 0 )
-            myfree(req->hashes,(req->n+1) * sizeof(*req->hashes)), req->hashes = 0;
-    }
-    //iguana_inv2poll(myinfo,coin);
-}*/
-
 void exchanges777_loop(void *ptr)
 {
     struct supernet_info *myinfo; struct exchange_info *exchange = ptr;

@@ -1,22 +1,36 @@
 #!/bin/bash
-# manually kill the iguana you need to restart first!
+#
+# Starts the iguana daemon for the KMD network
+#
+# Notes:
+# (1) Manually kill the iguana daemon you need to restart first!
+# (2) This only starts iguana daemon for KMD. If you are a notary you probably
+#     want to start iguana for 3rd party chains as well (and probably on a different machine).
+#     See the `m_notary_3rdparty` script.
 
+#move to the directory where the script exists
 cd "$(dirname "$0")"
 
-# unlock any locked utxos. This will unlock utxos for both iguans, need a filter for address to only unlock the pubkey you need to restart. 
+# unlock any locked utxos. This will unlock utxos for both iguans, 
+# need a filter for address to only unlock the pubkey you need to restart. 
 komodo-cli lockunspent true `komodo-cli listlockunspent | jq -c .` 
 
 # Start normally, no split is default on this branch. 
-stdbuf -oL $1 iguana notary & #> iguana.log 2> error.log  &
+# NOTE: You may wish to send output to a file ( i.e. '> iguana.log 2>&1 &' )
+stdbuf -oL $1 iguana notary &
 
+# determine my public IP
 myip=`curl -s4 checkip.amazonaws.com`
+
+# set the pubkey variable to my public key
 source pubkey.txt
 
+# tell iguana my public IP
 sleep 4
 curl --url "http://127.0.0.1:7776" --data "{\"agent\":\"SuperNET\",\"method\":\"myipaddr\",\"ipaddr\":\"$myip\"}"
 sleep 3
 
-# Season 6 peer IPs
+# Add Season 6 peer IPs
 curl --url "http://127.0.0.1:7776" --data "{\"agent\":\"iguana\",\"method\":\"addnotary\",\"ipaddr\":\"na.smk.dog\"}" 
 curl --url "http://127.0.0.1:7776" --data "{\"agent\":\"iguana\",\"method\":\"addnotary\",\"ipaddr\":\"dev.smk.dog\"}"
 curl --url "http://127.0.0.1:7776" --data "{\"agent\":\"iguana\",\"method\":\"addnotary\",\"ipaddr\":\"77.75.121.138\"}"

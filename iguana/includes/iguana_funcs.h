@@ -108,7 +108,6 @@ int32_t ramcoder_compress(uint8_t *bits,int32_t maxlen,uint8_t *data,int32_t dat
 uint64_t hconv_bitlen(uint64_t bitlen);
 struct iguana_block *iguana_blockptr(char *debugstr,struct iguana_info *coin,int32_t height);
 int32_t iguana_processrecv(struct supernet_info *myinfo,struct iguana_info *coin); // single threaded
-//void iguana_recvalloc(struct iguana_info *coin,int32_t numitems);
 void iguana_coins(void *arg);
 int32_t iguana_savehdrs(struct iguana_info *coin);
 
@@ -346,7 +345,6 @@ int32_t iguana_spendvectors(struct supernet_info *myinfo,struct iguana_info *coi
 int32_t iguana_balancegen(struct iguana_info *coin,int32_t incremental,struct iguana_bundle *bp,int32_t startheight,int32_t endheight,int32_t startemit);
 struct iguana_utxoaddr *iguana_utxoaddrfind(int32_t createflag,struct iguana_info *coin,int16_t hdrsi,uint32_t pkind,uint8_t rmd160[20],struct iguana_utxoaddr **prevp,int32_t p2shflag);
 int32_t iguana_bundlevalidate(struct supernet_info *myinfo,struct iguana_info *coin,struct iguana_bundle *bp,int32_t forceflag);
-void iguana_validateQ(struct iguana_info *coin,struct iguana_bundle *bp);
 struct iguana_bloominds iguana_calcbloom(bits256 hash2);
 int32_t iguana_bloomfind(struct iguana_info *coin,struct iguana_bloom16 *bloom,int32_t incr,struct iguana_bloominds bit);
 struct iguana_bloominds iguana_bloomset(struct iguana_info *coin,struct iguana_bloom16 *bloom,int32_t incr,struct iguana_bloominds bit);

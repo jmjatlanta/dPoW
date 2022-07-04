@@ -267,7 +267,7 @@ int32_t iguana_spendvectors(struct supernet_info *myinfo,struct iguana_info *coi
         return(0);
     }
     bp->startutxo = (uint32_t)time(NULL);
-    ptr = mycalloc('x',sizeof(*ptr),n);
+    ptr = calloc(sizeof(*ptr),n);
     total += n;
     startmillis = OS_milliseconds();
     if ( (0) && strcmp(coin->symbol,"BTC") == 0 )
@@ -290,7 +290,7 @@ int32_t iguana_spendvectors(struct supernet_info *myinfo,struct iguana_info *coi
             if ( txidind != B[i].firsttxidind || spendind != B[i].firstvin )
             {
                 printf("spendvectors: txidind %u != %u B[%d].firsttxidind || spendind %u != %u B[%d].firstvin\n",txidind,B[i].firsttxidind,i,spendind,B[i].firstvin,i);
-                myfree(ptr,sizeof(*ptr) * n);
+                free(ptr);
                 return(-1);
             }
             for (j=0; j<B[i].txn_count && errs==0; j++,txidind++)
@@ -299,7 +299,7 @@ int32_t iguana_spendvectors(struct supernet_info *myinfo,struct iguana_info *coi
                 if ( txidind != T[txidind].txidind || spendind != T[txidind].firstvin )
                 {
                     printf("spendvectors: txidind %u != %u nextT[txidind].firsttxidind || spendind %u != %u nextT[txidind].firstvin\n",txidind,(uint32_t)T[txidind].txidind,spendind,(uint32_t)T[txidind].firstvin);
-                    myfree(ptr,sizeof(*ptr) * n);
+                    free(ptr);
                     return(-1);
                 }
                 for (k=0; k<T[txidind].numvins && errs==0; k++,spendind++)
@@ -423,15 +423,14 @@ int32_t iguana_spendvectors(struct supernet_info *myinfo,struct iguana_info *coi
             {
                 if ( bp->tmpspends != ramchain->Xspendinds && emit > 0 )
                 {
-                    // printf("spendvectors: RT [%d] numtmpspends.%d vs starti.%d emit.%d\n",bp->hdrsi,bp->numtmpspends,starti,emit);
-                    bp->tmpspends = myrealloc('x',bp->tmpspends,sizeof(*ptr)*bp->numtmpspends,sizeof(*ptr)*(bp->numtmpspends+emit));
+                    bp->tmpspends = realloc(bp->tmpspends,sizeof(*ptr)*(bp->numtmpspends+emit));
                     memcpy(&bp->tmpspends[bp->numtmpspends],ptr,sizeof(*ptr)*emit);
                     bp->numtmpspends += emit;
                 }
             }
             else if ( emit > 0 )
             {
-                bp->tmpspends = myrealloc('x',ptr,sizeof(*ptr)*n,sizeof(*ptr)*emit);
+                bp->tmpspends = realloc(ptr,sizeof(*ptr)*emit);
                 bp->numtmpspends = emit;
                 //printf("ALLOC tmpspends.[%d]\n",bp->hdrsi);
                 ptr = 0;
@@ -441,8 +440,7 @@ int32_t iguana_spendvectors(struct supernet_info *myinfo,struct iguana_info *coi
         } else errs = -iguana_spendvectorsave(coin,bp,ramchain,ptr!=0?ptr:bp->tmpspends,emit,n);
     }
     if ( ptr != 0 )
-        myfree(ptr,sizeof(*ptr) * n);
-    //if ( bp != coin->current )
+        free(ptr);
     printf("%s UTXO [%4d].%-6d dur.%-2d [%8.3f] vec %-6d err.%d [%5.2f%%] %7d %9s of %d\n",coin->symbol,bp->hdrsi,bp->numtmpspends,(uint32_t)time(NULL)-starttime,OS_milliseconds()-startmillis,spendind,errs,100.*(double)emitted/(total+1),emit,mbstr(str,sizeof(*ptr) * emit),n);
     return(-errs);
 }
@@ -806,34 +804,8 @@ void iguana_initfinal(struct supernet_info *myinfo,struct iguana_info *coin,bits
         }
     }
     printf("%s i.%d bundlescount.%d\n",coin->symbol,i,coin->bundlescount);
-    //if ( coin->balanceswritten > 1 )
-        coin->balanceswritten = iguana_volatilesinit(myinfo,coin);
-    /*if ( coin->balanceswritten > 1 )
-    {
-        //for (i=0; i<coin->balanceswritten; i++)
-        for (i=0; i<coin->bundlescount; i++)
-        {
-            if ( (bp= coin->bundles[i]) != 0 )
-                iguana_bundlevalidate(myinfo,coin,bp,0);
-            //printf("%d ",i);
-            //iguana_validateQ(coin,coin->bundles[i]);
-        }
-    }*/
+    coin->balanceswritten = iguana_volatilesinit(myinfo,coin);
     printf("%s i.%d balanceswritten.%d\n",coin->symbol,i,coin->balanceswritten);
-    /*if ( coin->balanceswritten < coin->bundlescount )
-    {
-        for (i=0*coin->balanceswritten; i<coin->bundlescount; i++)
-        {
-            if ( (bp= coin->bundles[i]) != 0 && bp->queued == 0 )
-            {
-                //printf("%d ",i);
-                iguana_bundleQ(myinfo,coin,bp,1000);
-            }
-        }
-        printf("iguana_bundlesQ %d to %d\n",coin->balanceswritten,coin->bundlescount);
-    }
-    if ( (coin->origbalanceswritten= coin->balanceswritten) > 0 )
-        iguana_volatilesinit(myinfo,coin);*/
     iguana_savehdrs(coin);
     iguana_fastlink(coin,coin->balanceswritten * coin->chain->bundlesize - 1);
     iguana_walkchain(coin,0);
@@ -1030,7 +1002,7 @@ int32_t iguana_spendvectorsaves(struct iguana_info *coin)
                 else if ( (rdata= bp->ramchain.H.data) != 0 && iguana_spendvectorsave(coin,bp,&bp->ramchain,bp->tmpspends,bp->numtmpspends,rdata->numspends) == 0 )
                 {
                     if ( bp->tmpspends != 0 && bp->numtmpspends > 0 && bp->tmpspends != bp->ramchain.Xspendinds )
-                        myfree(bp->tmpspends,sizeof(*bp->tmpspends) * bp->numtmpspends);
+                        free(bp->tmpspends);
                     bp->numtmpspends = 0;
                     bp->tmpspends = 0;
                 }

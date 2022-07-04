@@ -405,7 +405,7 @@ void iguana_chainparms(struct supernet_info *myinfo,struct iguana_chain *chain,c
             decode_hex((uint8_t *)chain->alertpubkey,(int32_t)strlen(hexstr)>>1,hexstr);
         if ( (hexstr= jstr(argjson,"genesishash")) != 0 )
         {
-            chain->genesis_hash = mycalloc('G',1,strlen(hexstr)+1);
+            chain->genesis_hash = calloc(1,strlen(hexstr)+1);
             strcpy(chain->genesis_hash,hexstr);
         }
         if ( (genesis= jobj(argjson,"genesis")) != 0 )
@@ -579,7 +579,7 @@ struct iguana_chain *iguana_createchain(struct supernet_info *myinfo,cJSON *json
     char *symbol,*name; struct iguana_chain *chain = 0;
     if ( ((symbol= jstr(json,"newcoin")) != 0 || (symbol= jstr(json,"name")) != 0) && strlen(symbol) < 8 )
     {
-        chain = mycalloc('C',1,sizeof(*chain));
+        chain = calloc(1,sizeof(*chain));
         strcpy(chain->symbol,symbol);
         if ( (name= jstr(json,"description")) != 0 && strlen(name) < 32 )
             strcpy(chain->name,name);

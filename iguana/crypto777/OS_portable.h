@@ -17,12 +17,7 @@
 
 // iguana_OS has functions that invoke system calls. Whenever possible stdio and similar functions are use and most functions are fully portable and in this file. For things that require OS specific, the call is routed to iguana_OS_portable_*  Usually, all but one OS can be handled with the same code, so iguana_OS_portable.c has most of this shared logic and an #ifdef iguana_OS_nonportable.c
 
-#ifdef __APPLE__
-//#define LIQUIDITY_PROVIDER 1
-#endif
-
 #ifdef NATIVE_WINDOWS
-//#define uint64_t unsigned __int64
 #define PACKED
 #else
 #define PACKED __attribute__((packed))
@@ -31,6 +26,7 @@
 #if defined(__GNUC__) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE /* for pthread_setname_np() */
 #endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -43,6 +39,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
+
 #ifdef _WIN32
 #define sleep(x) Sleep(1000*(x))
 #include "../OSlibs/win/mingw.h"
@@ -53,7 +50,6 @@
 #ifndef NATIVE_WINDOWS
 #define EADDRINUSE WSAEADDRINUSE
 #endif
-
 #else
 #include <sys/time.h>
 #include <time.h>
@@ -82,13 +78,7 @@
 #define MAP_FILE        0
 #endif
 
-
 void RenameThread(const char* name);
-
-//#define fopen myfopen
-//#define fclose myfclose
-//FILE *myfopen(char *fname,char *mode);
-//int32_t myfclose(FILE *fp);
 
 struct huffstream { uint8_t *ptr,*buf; uint32_t bitoffset,maski,endpos; uint32_t allocsize:31,allocated:1; };
 typedef struct huffstream HUFF;
@@ -264,14 +254,6 @@ int32_t OS_releasemap(void *ptr,unsigned long filesize);
 double OS_milliseconds();
 void OS_randombytes(uint8_t *x,long xlen);
 
-//int32_t OS_syncmap(struct OS_mappedptr *mp,long len);
-//void *OS_tmpalloc(char *dirname,char *name,struct OS_memspace *mem,long origsize);
-
-long myallocated(uint8_t type,long change);
-void *mycalloc(uint8_t type,int32_t n,long itemsize);
-void myfree(void *_ptr,long allocsize);
-//void free_queueitem(void *itemdata);
-void *myrealloc(uint8_t type,void *oldptr,long oldsize,long newsize);
 void *myaligned_alloc(uint64_t allocsize);
 int32_t myaligned_free(void *ptr,long size);
 
@@ -438,4 +420,3 @@ extern char NXTAPIURL[];
 extern int32_t smallprimes[168],Debuglevel;
 
 #endif
-

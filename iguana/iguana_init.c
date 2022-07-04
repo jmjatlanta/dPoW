@@ -282,8 +282,6 @@ void iguana_parseline(struct supernet_info *myinfo,struct iguana_info *coin,int3
             {
                 if ( fread(&blockRO,1,sizeof(blockRO),fp) != sizeof(blockRO) )
                     break;
-                if ( i > (coin->blocks.maxbits - 1000) )
-                    iguana_recvalloc(coin,i + 100000);
                 coin->blocks.RO[i] = blockRO;
                 char str[65];
                 if ( bits256_nonz(blockRO.hash2) > 0 )
@@ -357,11 +355,8 @@ void iguana_parseline(struct supernet_info *myinfo,struct iguana_info *coin,int3
                 }
                 if ( line[k + 65] != 0 && line[k+65] != '\n' && line[k+65] != '\r' )
                 {
-                    //if ( height > (coin->blocks.maxbits - 1000) )
-                    //    iguana_recvalloc(coin,height + 100000);
                     decode_hex(allhash.bytes,sizeof(allhash),line+k+1 + 64 + 1);
                     init_hexbytes_noT(checkstr,allhash.bytes,sizeof(allhash));
-                    //printf("parseline: k.%d %d height.%d m.%d bundlesize.%d (%s) check.(%s)\n",k,line[k],height,m,coin->chain->bundlesize,&line[k+1+65],checkstr);// + strlen(line+k+1)]);
                     if ( strncmp(checkstr,line+k+1 + 64 + 1,64) == 0 )
                     {
                         init_hexbytes_noT(checkstr,hash2.bytes,sizeof(hash2));
@@ -437,7 +432,7 @@ void iguana_bundlepurge(struct iguana_info *coin,struct iguana_bundle *bp)
                 free(bp->speculativecache[i]);
                 bp->speculativecache[i] = 0;
             }
-        myfree(bp->speculative,sizeof(*bp->speculative) * bp->numspec);
+        free(bp->speculative);
     }
     bp->numspec = 0;
     bp->speculative = 0;
@@ -451,7 +446,7 @@ void iguana_blockpurge(struct iguana_info *coin,struct iguana_block *block)
     if ( block->req != 0 )
     {
         printf("purge req inside block\n");
-        myfree(block->req,block->req->allocsize);
+        free(block->req);
     }
     free(block);
 }
@@ -485,27 +480,26 @@ void iguana_coinpurge(struct iguana_info *coin)
     }
     coin->RTgenesis = 0;
     while ( (ptr= queue_dequeue(&bundlesQ)) != 0 )
-        myfree(ptr,ptr->allocsize);
+        free(ptr);
     if ( 1 )
     {
         while ( (hashitem= queue_dequeue(&coin->hdrsQ)) != 0 )
             free(hashitem);
         while ( (breq= queue_dequeue(&coin->blocksQ)) != 0 )
-            myfree(breq,sizeof(*breq));
+            free(breq);
         while ( (breq= queue_dequeue(&coin->priorityQ)) != 0 )
-            myfree(breq,sizeof(*breq));
+            free(breq);
         while ( (req= queue_dequeue(&coin->cacheQ)) != 0 )
-            myfree(req,req->allocsize);
+            free(req);
         while ( (req= queue_dequeue(&coin->recvQ)) != 0 )
         {
             if ( req->blocks != 0 )
-                myfree(req->blocks,sizeof(*req->blocks) * req->n), req->blocks = 0;
+                free(req->blocks), req->blocks = 0;
             if ( req->hashes != 0 )
-                myfree(req->hashes,sizeof(*req->hashes) * req->n), req->hashes = 0;
-            myfree(req,req->allocsize);
+                free(req->hashes), req->hashes = 0;
+            free(req);
         }
     }
-    //iguana_RTramchainfree(coin,coin->current);
     iguana_RTdataset_free(coin);
     coin->bundlescount = 0;
     for (i=0; i<coin->bundlescount; i++)

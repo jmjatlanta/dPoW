@@ -23,6 +23,7 @@
 #define HAVE_STRUCT_TIMESPEC
 #include "pnacl_main.h"
 #include "iguana777.h"
+#include <stdbool.h>
 
 
 struct iguana_jsonitem { struct queueitem DL; struct supernet_info *myinfo; uint32_t fallback,expired,allocsize; char *retjsonstr; char remoteaddr[64]; uint16_t port; char jsonstr[]; };
@@ -208,7 +209,7 @@ int32_t iguana_jsonQ(struct supernet_info *myinfo,struct iguana_info *coin)
                 free(str);
             }
             printf("garbage collection: expired.(%s)\n",ptr->jsonstr);
-            myfree(ptr,ptr->allocsize);
+            free(ptr);
         } else queue_enqueue("finishedQ",finishedQ,&ptr->DL);
     }
     if ( (ptr= queue_dequeue(jsonQ)) != 0 )
@@ -229,7 +230,7 @@ char *iguana_blockingjsonstr(struct supernet_info *myinfo,struct iguana_info *co
     //printf("blocking case.(%s) %.0f maxmillis.%d\n",jsonstr,OS_milliseconds(),maxmillis);
     len = (int32_t)strlen(jsonstr);
     allocsize = sizeof(*ptr) + len + 1;
-    ptr = mycalloc('J',1,allocsize);
+    ptr = calloc(1,allocsize);
     ptr->allocsize = allocsize;
     ptr->myinfo = myinfo;
     ptr->port = port;
@@ -2204,24 +2205,15 @@ void display_help(const char* bin_name)
 
 void iguana_main(void *arg)
 {
-    int32_t usessl = 0,ismainnet = 1, do_OStests = 0; struct supernet_info *myinfo; char *elected = "elected";
-    if ( (IGUANA_BIGENDIAN= iguana_isbigendian()) > 0 )
-        printf("BIGENDIAN\n");
-    else if ( IGUANA_BIGENDIAN == 0 )
-        printf("LITTLE ENDIAN arg.%p\n",arg);
-    else printf("ENDIAN ERROR\n");
-    mycalloc(0,0,0);
 #ifdef __APPLE__
-    char *batchstr,*batchstr2; cJSON *batchjson; long batchsize; char fname[512],fname2[512]; int32_t batchid = 18;
-    sprintf(fname,"REVS.raw"), sprintf(fname2,"REVS.rawtxids");
-    if ( (0) && (batchstr= OS_filestr(&batchsize,fname)) != 0 && (batchstr2= OS_filestr(&batchsize,fname2)) != 0 )
+    char fname[512];
+    sprintf(fname,"batch18.txt");
+    long batchsize; 
+    char *batchstr = OS_filestr(&batchsize, fname);
+    if ( batchstr != 0 )
     {
-        komodo_REVS_merge(batchstr,batchstr2);
-    }
-    sprintf(fname,"batch%d.txt",batchid);
-    if ( 1 && (batchstr= OS_filestr(&batchsize,fname)) != 0 )
-    {
-        if ( (batchjson= cJSON_Parse(batchstr)) != 0 )
+        cJSON *batchjson = cJSON_Parse(batchstr);
+        if ( batchjson != 0 )
         {
             komodo_ICO_batch(batchjson,batchid);
             free_json(batchjson);
@@ -2229,7 +2221,7 @@ void iguana_main(void *arg)
         free(batchstr);
     }
 #endif
-    myinfo = SuperNET_MYINFO(0);
+    struct supernet_info *myinfo = SuperNET_MYINFO(0);
     myinfo->rpcport = IGUANA_RPCPORT;
     decode_hex(CRYPTO777_RMD160,20,CRYPTO777_RMD160STR);
     decode_hex(CRYPTO777_PUBSECP33,33,CRYPTO777_PUBSECPSTR);
@@ -2238,6 +2230,9 @@ void iguana_main(void *arg)
     libgfshare_init(myinfo,myinfo->logs,myinfo->exps);
     myinfo->dpowsock = myinfo->dexsock = myinfo->pubsock = myinfo->subsock = myinfo->reqsock = myinfo->repsock = -1;
     myinfo->psockport = 30000;
+    bool do_OStests = false; 
+    char *elected = "elected";
+
     if ( arg != 0 )
     {
         if ( strcmp((char *)arg,"OStests") == 0 )
@@ -2289,32 +2284,10 @@ void iguana_main(void *arg)
         return;
     }
     strcpy(myinfo->rpcsymbol,"BTCD");
-    //iguana_urlinit(myinfo,ismainnet,usessl);
     portable_mutex_init(&myinfo->pending_mutex);
     portable_mutex_init(&myinfo->MoM_mutex);
-    /*
-    // try to use PTHREAD_MUTEX_RECURSIVE, instead of PTHREAD_MUTEX_NORMAL, currently disabled
-    pthread_mutexattr_t mta_dpow;
-    pthread_mutexattr_init(&mta_dpow);
-    pthread_mutexattr_settype(&mta_dpow, PTHREAD_MUTEX_RECURSIVE);
-    int rc_dpowmutex = pthread_mutex_init(&myinfo->dpowmutex, &mta_dpow);
-    if ( rc_dpowmutex != 0) {
-        printf("[ Decker ] %s.%d (%s): rc_dpowmutex = %d\n", __FILE__, __LINE__, __func__, rc_dpowmutex);
-    }
-    */
     portable_mutex_init(&myinfo->dpowmutex);
-    /*
-    // try to use PTHREAD_MUTEX_RECURSIVE, instead of PTHREAD_MUTEX_NORMAL, currently disabled
-    pthread_mutexattr_t mta_notary;
-    pthread_mutexattr_init(&mta_notary);
-    pthread_mutexattr_settype(&mta_notary, PTHREAD_MUTEX_RECURSIVE);
-    int rc_notarymutex = pthread_mutex_init(&myinfo->notarymutex, &mta_notary);
-    if ( rc_notarymutex != 0) {
-        printf("[ Decker ] %s.%d (%s): rc_notarymutex = %d\n", __FILE__, __LINE__, __func__, rc_notarymutex);
-    }
-    */
     portable_mutex_init(&myinfo->notarymutex);
-
     portable_mutex_init(&myinfo->psockmutex);
 
 #if LIQUIDITY_PROVIDER
@@ -2335,24 +2308,10 @@ void iguana_main(void *arg)
     {
         if ( iguana_commandline(myinfo,arg) == 0 )
         {
-            //iguana_helpinit(myinfo);
-            //iguana_relays_init(myinfo);
-            //basilisks_init(myinfo);
 #ifdef __APPLE__
             iguana_appletests(myinfo);
 #endif
-            /*char *retstr;
-            if ( (retstr= _dex_getnotaries(myinfo,"KMD")) != 0 )
-            {
-                printf("INITIAL NOTARIES.(%s)\n",retstr);
-                free(retstr);
-            }*/
         }
-    }
-    else
-    {
-        //basilisks_init(myinfo);
-        
     }
     iguana_launchdaemons(myinfo);
 }

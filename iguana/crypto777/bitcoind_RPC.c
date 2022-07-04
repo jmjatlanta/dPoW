@@ -13,23 +13,9 @@
  *                                                                            *
  ******************************************************************************/
 
-
-//#define KEEPALIVE breaks marketmaker api
-
 #ifndef FROM_JS
 #include "OS_portable.h"
 #define LIQUIDITY_PROVIDER 1
-
-/*#define malloc(n) LP_alloc(n)
-#define realloc(ptr,n) LP_realloc(ptr,n)
-#define calloc(a,b) LP_alloc((uint64_t)(a) * (b))
-#define free(ptr) LP_free(ptr)
-#define clonestr(str) LP_clonestr(str)
-
-void *LP_realloc(void *ptr,uint64_t len);
-void *LP_alloc(uint64_t len);
-void LP_free(void *ptr);
-char *LP_clonestr(char *str);*/
 
 int32_t bitcoind_RPC_inittime;
 
@@ -124,7 +110,7 @@ char *post_process_bitcoind_RPC(char *debugstr,char *command,char *rpcstr,char *
     //fprintf(stderr,"<<<<<<<<<<< bitcoind_RPC: postprocess returns.(%s)\n",retstr);
     return(retstr);
 }
-#endif
+#endif // EXTRACT_BITCOIN_RESULT
 
 /************************************************************************
  *
@@ -578,7 +564,7 @@ void curlhandle_free(void *curlhandle)
     curl_easy_cleanup(curlhandle);
 }
 
-#else
+#else // LIQUIDITY_PROVIDER
 char *bitcoind_RPC(char **retstrp,char *debugstr,char *url,char *userpass,char *command,char *params)
 {
     return(clonestr("{\"error\":\"curl is disabled\"}"));
@@ -589,4 +575,4 @@ void *curl_post(void **cHandlep,char *url,char *userpass,char *postfields,char *
     return(clonestr("{\"error\":\"curl is disabled\"}"));
 }
 #endif
-#endif
+#endif // FROM_JS

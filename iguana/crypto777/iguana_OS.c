@@ -57,90 +57,8 @@ char *mbstr(char *str,double n)
 	return(str);
 }
 
-long myallocated(uint8_t type,long change)
-{
-    static int64_t Total_allocated,HWM_allocated,Type_allocated[256];
-    int32_t i; int64_t total = 0; char buf[2049],str[65];
-    buf[0] = 0;
-    if ( type == 0 && change <= 0 )
-    {
-        for (i=0; i<256; i++)
-        {
-            if ( Type_allocated[i] != 0 )
-            {
-                total += Type_allocated[i];
-                if ( change == 0 )
-                    sprintf(buf+strlen(buf),"(%c %s) ",i,mbstr(str,Type_allocated[i]));
-            }
-        }
-        if ( change == 0 )
-        {
-            sprintf(buf + strlen(buf),"-> total %lld %s",(long long)total,mbstr(str,total));
-            printf("%s\n",buf);
-        }
-    }
-    else
-    {
-        Type_allocated[type] += change;
-        Total_allocated += change;
-        if ( Total_allocated > HWM_allocated )
-        {
-            HWM_allocated = Total_allocated * 1.5;
-            printf("HWM allocated %ld %s\n",(long)Total_allocated,mbstr(str,Total_allocated));
-        }
-    }
-    return(total);
-}
-
-void *mycalloc(uint8_t type,int32_t n,long itemsize)
-{
-#ifdef USE_MYCALLOC
-    //static portable_mutex_t MEMmutex;
-    struct allocitem *item; int64_t allocsize = ((uint64_t)n * itemsize);
-    if ( type == 0 && n == 0 && itemsize == 0 )
-    {
-        //portable_mutex_init(&MEMmutex);
-        myfree(mycalloc('t',1024,1024 * 32),1024*1024*32);
-        return(0);
-    }
-    //portable_mutex_lock(&MEMmutex);
-    myallocated(type,allocsize);
-    while ( (item= calloc(1,sizeof(struct allocitem) + allocsize + 16)) == 0 )
-    {
-        char str[65];
-        printf("mycalloc.%c: need to wait for memory.(%d,%ld) %s to be available\n",type,n,itemsize,mbstr(str,allocsize));
-        sleep(1);
-    }
-    //printf("calloc origptr.%p retptr.%p size.%ld\n",item,(void *)(long)item + sizeof(*item),allocsize);
-    item->allocsize = (uint32_t)allocsize;
-    item->type = type;
-    //portable_mutex_unlock(&MEMmutex);
-    return((void *)((long)item + sizeof(*item)));
-#else
-    return(calloc(n,itemsize));
-#endif
-}
-
 struct queueitem *queueitem(char *str)
 {
-    /*struct queueitem *item; int32_t n,allocsize; char *data; uint8_t type = 'y';
-     //portable_mutex_lock(&MEMmutex);
-     n = (uint32_t)strlen(str) + 1;
-     allocsize = (uint32_t)(sizeof(struct queueitem) + n);
-     myallocated(type,allocsize);
-     while ( (item= calloc(1,allocsize)) == 0 )
-     {
-     char str[65];
-     printf("queueitem: need to wait for memory.(%d,%ld) %s to be available\n",n,(long)sizeof(*item),mbstr(str,allocsize));
-     sleep(1);
-     }
-     item->allocsize = (uint32_t)allocsize;
-     item->type = type;
-     data = (void *)(long)((long)item + sizeof(*item));
-     memcpy(data,str,n);
-     //printf("(%c) queueitem.%p itemdata.%p n.%d allocsize.%d\n",type,item,data,n,allocsize);
-     //portable_mutex_unlock(&MEMmutex);
-     return(data);*/
     struct stritem *sitem; int32_t len;
     len = (int32_t)strlen(str);
     sitem = calloc(1,sizeof(*sitem) + len + 16);
@@ -148,79 +66,15 @@ struct queueitem *queueitem(char *str)
     return(&sitem->DL);
 }
 
-#ifdef USE_MYCALLOC
-void _myfree(uint8_t type,int32_t origallocsize,void *origptr,int32_t allocsize)
-{
-    //portable_mutex_lock(&MEMmutex);
-    if ( allocsize == origallocsize )
-    {
-        myallocated(type,-allocsize);
-        // Type_allocated[type & 0xff] -= allocsize;
-        // Total_allocated -= allocsize;
-        //printf("myfree.%p size.%d %d type %x\n",origptr,allocsize,origallocsize,type);
-        free(origptr);
-    }
-    else
-    {
-        printf("myfree size error %d vs %d at %p\n",allocsize,origallocsize,origptr);
-        static int32_t y,z;
-        printf("div by zero! %d\n",y/z);
-        getchar();
-    }
-    //portable_mutex_unlock(&MEMmutex);
-}
-
-void myfree(void *_ptr,long allocsize)
-{
-    struct allocitem *item = (void *)((long)_ptr - sizeof(struct allocitem));
-    if  ( allocsize == 0 )
-    {
-        printf("myfree zero allocsize %p?\n",_ptr);
-        return;
-    }
-    _myfree(item->type,item->allocsize,item,(uint32_t)allocsize);
-}
-
-/*void free_queueitem(void *itemdata)
- {
- struct queueitem *item = (void *)((long)itemdata - sizeof(struct queueitem));
- //printf("freeq item.%p itemdata.%p size.%d\n",item,itemdata,item->allocsize);
- _myfree(item->type,item->allocsize,item,item->allocsize);
- }*/
-
-void *myrealloc(uint8_t type,void *oldptr,long oldsize,long newsize)
-{
-    void *newptr;
-    newptr = mycalloc(type,1,newsize);
-    //printf("newptr.%p type.%c oldsize.%ld newsize.%ld\n",newptr,type,oldsize,newsize);
-    if ( oldptr != 0 )
-    {
-        memcpy(newptr,oldptr,oldsize < newsize ? oldsize : newsize);
-        myfree(oldptr,oldsize);
-    }
-    return(newptr);
-}
-#else
-void myfree(void *_ptr,long allocsize)
-{
-    free(_ptr);
-}
-
-void *myrealloc(uint8_t type,void *oldptr,long oldsize,long newsize)
-{
-    return(realloc(oldptr,newsize));
-}
-#endif
-
 static uint64_t _align16(uint64_t ptrval) { if ( (ptrval & 15) != 0 ) ptrval += 16 - (ptrval & 15); return(ptrval); }
 
 void *myaligned_alloc(uint64_t allocsize)
 {
     void *ptr,*realptr; uint64_t tmp;
 #if defined(_M_X64)
-	realptr = mycalloc('A', 1, (uint64_t)(allocsize + 16 + sizeof(realptr)));
+	realptr = calloc(1, (uint64_t)(allocsize + 16 + sizeof(realptr)));
 #else
-    realptr = mycalloc('A',1,(long)(allocsize + 16 + sizeof(realptr)));
+    realptr = calloc(1,(long)(allocsize + 16 + sizeof(realptr)));
 #endif
     tmp = _align16((long)realptr + sizeof(ptr));
     memcpy(&ptr,&tmp,sizeof(ptr));
@@ -249,8 +103,7 @@ int32_t myaligned_free(void *ptr,long size)
         printf("ptr %p and realptr %p too far apart %ld\n",ptr,realptr,diff);
         return(-2);
     }
-    //printf("aligned_free: ptr %p -> realptr %p %ld\n",ptr,realptr,diff);
-    myfree(realptr,size + 16 + sizeof(realptr));
+    free(realptr);
     return(0);
 }
 
@@ -308,9 +161,6 @@ void *queue_delete(queue_t *queue,struct queueitem *copy,int32_t copysize,int32_
             {
                 DL_DELETE(queue->list,item);
                 portable_mutex_unlock(&queue->mutex);
-                //printf("name.(%s) deleted item.%p list.%p\n",queue->name,item,queue->list);
-                //if ( freeitem != 0 )
-                //    myfree(item,copysize);
                 return(item);
             }
         }
@@ -328,9 +178,8 @@ void *queue_free(queue_t *queue)
         DL_FOREACH_SAFE(queue->list,item,tmp)
         {
             DL_DELETE(queue->list,item);
-            myfree(item,sizeof(struct queueitem));
+            free(item);
         }
-        //printf("name.(%s) dequeue.%p list.%p\n",queue->name,item,queue->list);
     }
 	portable_mutex_unlock(&queue->mutex);
     return(0);
@@ -344,11 +193,10 @@ void *queue_clone(queue_t *clone,queue_t *queue,int32_t size)
     {
         DL_FOREACH_SAFE(queue->list,item,tmp)
         {
-            ptr = mycalloc('c',1,sizeof(*ptr));
+            ptr = calloc(1,sizeof(*ptr));
             memcpy(ptr,item,size);
             queue_enqueue(queue->name,clone,ptr);
         }
-        //printf("name.(%s) dequeue.%p list.%p\n",queue->name,item,queue->list);
     }
 	portable_mutex_unlock(&queue->mutex);
     return(0);
@@ -381,8 +229,7 @@ void iguana_mempurge(struct OS_memspace *mem)
 {
     if ( mem->allocated != 0 && mem->ptr != 0 )//&& mem->totalsize > 0 )
     {
-        //printf("mempurge.(%s) %ld\n",mem->name,(long)mem->totalsize);
-        myfree(mem->ptr,mem->totalsize), mem->ptr = 0;
+        free(mem->ptr), mem->ptr = 0;
     }
     iguana_memreset(mem);
     mem->totalsize = 0;
@@ -397,22 +244,17 @@ void *iguana_meminit(struct OS_memspace *mem,char *name,void *ptr,int64_t totals
         {
             iguana_mempurge(mem);
             mem->totalsize = 0;
-            //printf("memptr.%p totalsize.%ld vs totalsize.%ld\n",mem->ptr,(long)mem->totalsize,(long)totalsize);
-        } //else printf("mem->ptr.%p mem->totalsize %ld\n",mem->ptr,(long)mem->totalsize);
+        }
         if ( mem->ptr == 0 )
         {
-            //static long alloc;
-            //alloc += totalsize;
-            //char str[65]; printf("iguana_meminit.(%s) alloc %s\n",name,mbstr(str,totalsize));
-            if ( (mem->ptr= mycalloc('d',1,totalsize)) == 0 )
+            if ( (mem->ptr= calloc(1,totalsize)) == 0 )
             {
                 printf("iguana_meminit: cant get %d bytes\n",(int32_t)totalsize);
                 exit(-1);
                 return(0);
             }
             mem->totalsize = totalsize;
-        } //else printf("memptr.%p\n",mem->ptr);
-        //printf("meminit.(%s) %d vs %ld\n",mem->name,(int32_t)totalsize,(long)mem->totalsize);
+        }
         mem->allocated = 1;
     }
     else
@@ -664,13 +506,13 @@ int64_t OS_copyfile(char *src,char *dest,int32_t cmpflag)
 #else
             allocsize = 1024 * 1024 * 128L;
 #endif
-            buf = mycalloc('F',1,allocsize);
+            buf = calloc(1,allocsize);
             while ( (len= fread(buf,1,allocsize,srcfp)) > 0 )
                 if ( (long)fwrite(buf,1,len,destfp) != len )
                     printf("write error at (%s) src.%ld vs. (%s) dest.%ld\n",src,ftell(srcfp),dest,ftell(destfp));
             len = ftell(destfp);
             fclose(destfp);
-            myfree(buf,allocsize);
+            free(buf);
         }
         fclose(srcfp);
     }

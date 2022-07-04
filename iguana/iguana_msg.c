@@ -859,12 +859,12 @@ int32_t iguana_send_hashes(struct iguana_info *coin,char *command,struct iguana_
     size = sizeof(struct iguana_msghdr) + sizeof(uint64_t) + 1 + sizeof(bits256)*(n+1);
     if ( (varint= n) <= IGUANA_MAXINV )
     {
-        serialized = mycalloc('h',1,size);
+        serialized = calloc(1,size);
         nVersion = 0;
         len = iguana_rwblockhash(1,&serialized[sizeof(struct iguana_msghdr)],&nVersion,&varint,hashes,&stophash);
         //printf("%s send_hashes.%d %s height.%d\n",addr->ipaddr,n,bits256_str(hashes[0]),iguana_height(coin,hashes[0]));
         retval = iguana_queue_send(addr,0,serialized,command,len);
-        myfree(serialized,size);
+        free(serialized);
     } else printf("iguana_send_hashes: unexpected n.%d\n",n);
     return(retval);
 }
@@ -881,7 +881,7 @@ int32_t iguana_intvectors(struct iguana_info *coin,struct iguana_peer *addr,int3
         if ( type == MSG_TX )
         {
             if ( txids == 0 )
-                txids = mycalloc('t',(int32_t)x+1,sizeof(*txids));
+                txids = calloc((int32_t)x+1,sizeof(*txids));
             txids[m++] = hash;
             if ( (rand() % 1000) == 0 && i == x-1 )
                 printf("%s %d of %d: tx.%llx len.%d\n",addr->ipaddr,i,(int32_t)x,(long long)hash.txid,len);
@@ -890,20 +890,11 @@ int32_t iguana_intvectors(struct iguana_info *coin,struct iguana_peer *addr,int3
         {
             if ( blockhashes == 0 )
             {
-                blockhashes = mycalloc('f',(int32_t)x+1,sizeof(*blockhashes));
+                blockhashes = calloc((int32_t)x+1,sizeof(*blockhashes));
                 n = 1;
             }
             blockhashes[n++] = hash;
         }
-        /*else if ( type == MSG_QUOTE )
-        {
-            if ( quotes == 0 )
-            {
-                quotes = mycalloc('q',(int32_t)x+1,sizeof(*quotes));
-                q = 1;
-            }
-            quotes[q++] = hash;
-        }*/
         else if ( type == MSG_FILTERED_BLOCK )
             printf(" %d of %d: merkle.%llx\n",i,(int32_t)x,(long long)hash.txid);
         else printf("what type is %d\n",type);
@@ -913,31 +904,30 @@ int32_t iguana_intvectors(struct iguana_info *coin,struct iguana_peer *addr,int3
         if ( n != x+1 )
         {
             printf("n.%d != x.%d -> realloc blockhashes\n",n,(int32_t)x+1);
-            blockhashes = myrealloc('f',blockhashes,(int32_t)((x+1)*sizeof(*blockhashes)),n*sizeof(*blockhashes));
-        } // else printf("n.%d == x.%d\n",n,(int32_t)x);
+            blockhashes = realloc(blockhashes,n*sizeof(*blockhashes));
+        }
         if ( processflag != 0 )
             iguana_gotblockhashesM(coin,addr,blockhashes,n), blockhashes = 0;
     }
     if ( m > 0 )
     {
         if ( m != x )
-            txids = myrealloc('t',txids,(int32_t)((x+1)*sizeof(*txids)),(m+1)*sizeof(*txids));
+            txids = realloc(txids,(m+1)*sizeof(*txids));
         if ( processflag != 0 )
             iguana_gottxidsM(coin,addr,txids,m), txids = 0;
     }
     if ( q > 0 )
     {
         if ( q != x )
-            quotes = myrealloc('q',quotes,(int32_t)((x+1)*sizeof(*quotes)),(q+1)*sizeof(*quotes));
+            quotes = realloc(quotes,(q+1)*sizeof(*quotes));
         if ( processflag != 0 )
             iguana_gotquotesM(coin,addr,quotes,q), quotes = 0;
     }
     if ( txids != 0 )
-        myfree(txids,sizeof(*txids) * (x+1));
+        free(txids);
     if ( blockhashes != 0 )
-        myfree(blockhashes,sizeof(*blockhashes) * (x+1));
+        free(blockhashes);
     return(len);
-    //printf("intvectors.%c recvlen.%d\n",intvectors,recvlen);
 }
 
 int32_t iguana_msgparser(struct supernet_info *myinfo,struct iguana_info *coin,struct iguana_peer *addr,struct OS_memspace *rawmem,struct OS_memspace *txmem,struct OS_memspace *hashmem,struct iguana_msghdr *H,uint8_t *data,int32_t recvlen,int32_t fromcache)
@@ -1037,8 +1027,7 @@ int32_t iguana_msgparser(struct supernet_info *myinfo,struct iguana_info *coin,s
                         if ( rawmem->totalsize == 0 )
                             iguana_meminit(rawmem,"bighdrs",0,IGUANA_MAXPACKETSIZE * 3,0);
                         memset(prevhash2.bytes,0,sizeof(prevhash2));
-                        zblocks = mycalloc('z',1,(int32_t)(sizeof(struct iguana_zblock) * n));
-                        //printf("%s got %d headers len.%d\n",coin->symbol,n,recvlen);
+                        zblocks = calloc(1,(int32_t)(sizeof(struct iguana_zblock) * n));
                         for (i=0; i<n; i++)
                         {
                             if ( coin->chain->auxpow != 0 )
@@ -1074,7 +1063,7 @@ int32_t iguana_msgparser(struct supernet_info *myinfo,struct iguana_info *coin,s
                         if ( blockchain_branch != 0 )
                             free(blockchain_branch);
                         if ( iguana_gotheadersM(coin,addr,zblocks,n) < 0 )
-                            myfree(zblocks,(int32_t)(sizeof(struct iguana_zblock) * n));
+                            free(zblocks);
                         if ( len == recvlen && addr != 0 )
                             addr->msgcounts.headers++;
                     } else printf("got unexpected n.%d for headers\n",n);
@@ -1203,7 +1192,7 @@ int32_t iguana_msgparser(struct supernet_info *myinfo,struct iguana_info *coin,s
         {
             struct iguana_msgtx *tx;
             iguana_memreset(rawmem);
-            tx = iguana_memalloc(rawmem,sizeof(*tx),1);//mycalloc('u',1,sizeof(*tx));
+            tx = iguana_memalloc(rawmem,sizeof(*tx),1);
             len = iguana_rwtx(myinfo,coin->chain->zcash,0,coin,rawmem,data,tx,recvlen,&tx->txid,coin->chain->isPoS,strcmp(coin->symbol,"VPN")==0);
             if ( addr != 0 )
             {

@@ -287,13 +287,13 @@ void iguana_terminate(struct iguana_thread *t)
     if ( retval != 0 )
         printf("error.%d terminating t.%p thread.%s\n",retval,t,t->name);
 #endif
-    myfree(t,sizeof(*t));
+    free(t);
 }
 
 struct iguana_thread *iguana_launch(struct iguana_info *coin,char *name,iguana_func funcp,void *arg,uint8_t type)
 {
     int32_t retval; struct iguana_thread *t;
-    t = mycalloc('Z',1,sizeof(*t));
+    t = calloc(1,sizeof(*t));
     strcpy(t->name,name);
     t->coin = coin;
     t->funcp = funcp;
