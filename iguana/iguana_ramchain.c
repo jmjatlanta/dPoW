@@ -14,15 +14,11 @@
  ******************************************************************************/
 
 
-#define uthash_malloc(size) ((ramchain->hashmem == 0) ? mycalloc('u',1,size) : iguana_memalloc(ramchain->hashmem,size,1))
-#define uthash_free(ptr,size) ((ramchain->hashmem == 0) ? myfree(ptr,size) : 0)
-
-//#define HASH_BLOOM 16
-//#define HASH_INITIAL_NUM_BUCKETS_LOG2 5
+#define uthash_malloc(size) ((ramchain->hashmem == 0) ? calloc(1,size) : iguana_memalloc(ramchain->hashmem,size,1))
+#define uthash_free(ptr,size) ((ramchain->hashmem == 0) ? free(ptr) : 0)
 
 #include "iguana777.h"
 #include "exchanges/bitcoin.h"
-//void iguana_stub(void *ptr,int size) { }//printf("uthash_free ptr.%p %d\n",ptr,size); }
 
 #define iguana_hashfind(ramchain,selector,key) iguana_hashsetPT(ramchain,selector,key,0)
 
@@ -48,7 +44,7 @@ struct iguana_kvitem *iguana_hashsetPT(struct iguana_ramchain *ramchain,int32_t 
             ptr = iguana_memalloc(ramchain->hashmem,allocsize,1);
         else
         {
-            ptr = mycalloc('e',1,allocsize);
+            ptr = calloc(1,allocsize);
             printf("alloc.%d\n",allocsize);
         }
         if ( ptr == 0 )
@@ -1010,11 +1006,6 @@ int32_t iguana_ramchain_alloc(char *fname,struct iguana_info *coin,struct iguana
     memset(mem,0,sizeof(*mem));
     memset(hashmem,0,sizeof(*hashmem));
     hashsize = iguana_hashmemsize(numtxids,numunspents,numspends,numpkinds,numexternaltxids,scriptspace);
-    while ( (0) && (x= (myallocated(0,-1)+hashsize+allocsize + 65536)) > coin->MAXMEM )
-    {
-        char str[65],str2[65]; fprintf(stderr,"ht.%d wait for allocated %s < MAXMEM %s | elapsed %.2f minutes hashsize.%ld allocsize.%ld\n",height,mbstr(str,myallocated(0,-1)+hashsize+allocsize),mbstr(str2,coin->MAXMEM),(double)(time(NULL)-coin->startutc)/60.,(long)hashsize,(long)allocsize);
-        sleep(13);
-    }
     iguana_meminit(hashmem,"ramhashmem",0,3*hashsize + 65536,0);
     iguana_meminit(mem,"ramchain",0,allocsize + 65536,0);
     mem->alignflag = sizeof(uint32_t);
@@ -1217,20 +1208,13 @@ int32_t iguana_ramchain_verify(struct iguana_info *coin,struct iguana_ramchain *
 int32_t iguana_ramchain_free(struct iguana_info *coin,struct iguana_ramchain *ramchain,int32_t deleteflag)
 {
     struct iguana_kvitem *item,*tmp; struct iguana_ramchaindata *rdata;
-    //if ( (rdata= ramchain->H.data) == 0 )
-    //    return(-1);
     if ( (rdata= ramchain->H.data) != 0 && ramchain->H.ROflag != 0 && ramchain->hashmem == 0 )
     {
         if ( ramchain->A != ramchain->creditsA )
         {
-            //printf("hashmem.%p Free A %p %p, numpkinds.%d %ld\n",ramchain->hashmem,ramchain->A,ramchain->creditsA,rdata->numpkinds,sizeof(*ramchain->A) * rdata->numpkinds);
             if ( deleteflag != 0 && ramchain->A != 0 )
-                myfree(ramchain->A,sizeof(*ramchain->A) * rdata->numpkinds), ramchain->A = 0;
+                free(ramchain->A), ramchain->A = 0;
         }
-        //if ( ramchain->U2 != ramchain->roU2 )
-        //    myfree(ramchain->U2,sizeof(*ramchain->U2) * rdata->numunspents), ramchain->U2 = 0;
-        //if ( ramchain->P2 != ramchain->roP2 )
-        //    myfree(ramchain->P2,sizeof(*ramchain->P2) * rdata->numpkinds), ramchain->P2 = 0;
     }
     if ( deleteflag != 0 )
     {
@@ -1240,7 +1224,7 @@ int32_t iguana_ramchain_free(struct iguana_info *coin,struct iguana_ramchain *ra
             {
                 HASH_DEL(ramchain->txids,item);
                 if ( ramchain->hashmem == 0 )
-                    myfree(item,sizeof(*item));
+                    free(item);
             }
         }
         if ( ramchain->pkhashes != 0 )
@@ -1249,7 +1233,7 @@ int32_t iguana_ramchain_free(struct iguana_info *coin,struct iguana_ramchain *ra
             {
                 HASH_DEL(ramchain->pkhashes,item);
                 if ( ramchain->hashmem == 0 )
-                    myfree(item,sizeof(*item));
+                    free(item);
             }
         }
     }
@@ -1322,8 +1306,8 @@ int32_t iguana_ramchain_extras(struct supernet_info *myinfo,struct iguana_info *
             if ( (ramchain->hashmem= hashmem) != 0 )
                 iguana_memreset(hashmem);
             else printf("alloc ramchain->A %d\n",(int32_t)(sizeof(struct iguana_account) * rdata->numpkinds));
-            ramchain->A = (hashmem != 0 && hashmem->ptr != 0) ? iguana_memalloc(hashmem,sizeof(struct iguana_account) * rdata->numpkinds,1) : mycalloc('p',rdata->numpkinds,sizeof(struct iguana_account));
-            ramchain->Uextras = (hashmem != 0 && hashmem->ptr != 0) ? iguana_memalloc(hashmem,sizeof(*ramchain->Uextras) * rdata->numunspents,1) : mycalloc('p',rdata->numunspents,sizeof(*ramchain->Uextras));
+            ramchain->A = (hashmem != 0 && hashmem->ptr != 0) ? iguana_memalloc(hashmem,sizeof(struct iguana_account) * rdata->numpkinds,1) : calloc(rdata->numpkinds,sizeof(struct iguana_account));
+            ramchain->Uextras = (hashmem != 0 && hashmem->ptr != 0) ? iguana_memalloc(hashmem,sizeof(*ramchain->Uextras) * rdata->numunspents,1) : calloc(rdata->numunspents,sizeof(*ramchain->Uextras));
         } else err = iguana_volatilesmap(myinfo,coin,ramchain);
     }
     return(err);
@@ -2198,9 +2182,9 @@ void iguana_bundlemapfree(struct iguana_info *coin,struct OS_memspace *mem,struc
             //printf("unmap.%d/%d: %p %ld\n",j,num,ptrs[j],filesizes[j]);
             munmap(ptrs[j],filesizes[j]);
         }
-    myfree(ptrs,n * sizeof(*ptrs));
-    myfree(ipbits,n * sizeof(*ipbits));
-    myfree(filesizes,n * sizeof(*filesizes));
+    free(ptrs);
+    free(ipbits);
+    free(filesizes);
     if ( R != 0 )
     {
         for (j=starti; j<=endi; j++)
@@ -2209,7 +2193,7 @@ void iguana_bundlemapfree(struct iguana_info *coin,struct OS_memspace *mem,struc
             R[j].filesize = 0;
             iguana_ramchain_free(coin,&R[j],1);
         }
-        myfree(R,n * sizeof(*R));
+        free(R);
     }
     if ( mem != 0 )
         iguana_mempurge(mem);
@@ -2507,10 +2491,10 @@ int32_t iguana_bundlesaveHT(struct supernet_info *myinfo,struct iguana_info *coi
     destB = _destB;
     memset(destB,0,sizeof(*destB) * bp->n);
     //B = 0, Ux = 0, Sx = 0, P = 0, A = 0, X = 0, Kspace = TXbits = PKbits = 0, U = 0, S = 0, T = 0;
-    R = mycalloc('s',bp->n,sizeof(*R));
-    ptrs = mycalloc('w',bp->n,sizeof(*ptrs));
-    ipbits = mycalloc('w',bp->n,sizeof(*ipbits));
-    filesizes = mycalloc('f',bp->n,sizeof(*filesizes));
+    R = calloc(bp->n,sizeof(*R));
+    ptrs = calloc(bp->n,sizeof(*ptrs));
+    ipbits = calloc(bp->n,sizeof(*ipbits));
+    filesizes = calloc(bp->n,sizeof(*filesizes));
     if ( (num= iguana_bundlefiles(coin,ipbits,ptrs,filesizes,bp,starti,endi)) != bp->n )
     {
         iguana_bundlemapfree(coin,0,0,ipbits,ptrs,filesizes,num,R,starti,endi);

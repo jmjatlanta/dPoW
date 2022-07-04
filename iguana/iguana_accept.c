@@ -169,7 +169,7 @@ void iguana_acceptloop(void *args)
         }*/
         if ( (addr= iguana_peerslot(coin,ipbits,1)) == 0 )
         {
-            ptr = mycalloc('a',1,sizeof(*ptr));
+            ptr = calloc(1,sizeof(*ptr));
             strcpy(ptr->ipaddr,ipaddr);
             ptr->ipbits = ipbits;
             ptr->sock = sock;
@@ -202,7 +202,7 @@ int32_t iguana_pendingaccept(struct iguana_info *coin)
             addr->usock = ptr->sock;
             strcpy(addr->symbol,coin->symbol);
             iguana_launch(coin,"accept",iguana_dedicatedglue,addr,IGUANA_CONNTHREAD);
-            myfree(ptr,sizeof(*ptr));
+            free(ptr);
             return(1);
         } else queue_enqueue("requeue_acceptQ",&coin->acceptQ,&ptr->DL);
     }

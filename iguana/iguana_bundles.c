@@ -356,7 +356,7 @@ struct iguana_bundle *iguana_bundlecreate(struct iguana_info *coin,int32_t *bund
                 bp->allhash = allhash;
             return(bp);
         }
-        bp = mycalloc('b',1,sizeof(*bp));
+        bp = calloc(1,sizeof(*bp));
         bp->n = coin->chain->bundlesize;
         bp->hdrsi = bundleheight / coin->chain->bundlesize;
         bp->bundleheight = bundleheight;
@@ -395,7 +395,7 @@ struct iguana_bundle *iguana_bundlecreate(struct iguana_info *coin,int32_t *bund
         else
         {
             printf("error adding bundlehash2 bundleheight.%d\n",bundleheight);
-            myfree(bp,sizeof(*bp));
+            free(bp);
             bp = 0;
         }
         return(bp);
@@ -685,7 +685,7 @@ int32_t iguana_bundleissuemissing(struct supernet_info *myinfo,struct iguana_inf
                         iguana_sendblockreqPT(coin,0,bp,i,hash2,0);
                     }
                     struct iguana_blockreq *req = 0;
-                    req = mycalloc('y',1,sizeof(*req));
+                    req = calloc(1,sizeof(*req));
                     req->hash2 = hash2;
                     req->bp = bp;
                     req->height = bp->bundleheight + i;
@@ -749,7 +749,7 @@ int32_t iguana_blast(struct iguana_info *coin,struct iguana_peer *addr)
                         {
                             n++;
                             bp->issued[i] = 0;
-                            req = mycalloc('y',1,sizeof(*req));
+                            req = calloc(1,sizeof(*req));
                             req->hash2 = hash2;
                             req->bp = bp;
                             req->height = bp->bundleheight + i;
@@ -1047,13 +1047,11 @@ int32_t iguana_bundlefinalize(struct supernet_info *myinfo,struct iguana_info *c
         if ( queue_size(&coin->priorityQ) > 10000 )
         {
             while ( (breq= queue_dequeue(&coin->priorityQ)) != 0 )
-                myfree(breq,sizeof(*breq));
-            //printf("cleared priorityQ\n");
+                free(breq);
         }
         if ( bp->emitfinish != 0 )
         {
             printf("already EMIT for bundle.%d\n",bp->hdrsi);
-            //return(0);
         }
         bp->emitfinish = 1;
         usleep(100000); // make sure new incoming packet didnt overwrite
@@ -1492,9 +1490,9 @@ void iguana_bundlestats(struct supernet_info *myinfo,struct iguana_info *coin,ch
                 if ( coin->stuckiters > 2 )
                 {
                     while ( (breq= queue_dequeue(&coin->blocksQ)) != 0 )
-                        myfree(breq,sizeof(*breq));
+                        free(breq);
                     while ( (breq= queue_dequeue(&coin->priorityQ)) != 0 )
-                        myfree(breq,sizeof(*breq));
+                        free(breq);
                     for (i=0; i<bp->n; i++)
                     {
                         if ( (block= bp->blocks[i]) != 0 && block->txvalid == 0 )
@@ -1549,8 +1547,6 @@ void iguana_bundlestats(struct supernet_info *myinfo,struct iguana_info *coin,ch
         if ( coin->RTheight == 0 )
             printf("%s bQ.%d %d:%02d:%02d stuck.%d max.%d\n",str,numbQ,(int32_t)difft.x/3600,(int32_t)(difft.x/60)%60,(int32_t)difft.x%60,coin->stucktime!=0?(uint32_t)time(NULL) - coin->stucktime:0,coin->maxstuck);
         strcpy(coin->lastdispstr,str);
-        if ( (rand() % 100) == 0 )
-            myallocated(0,0);
         coin->lastdisp = (uint32_t)time(NULL);
     }
     if ( (0) && (bp= coin->current) != 0 && coin->RTheight >= bp->bundleheight && coin->RTheight < bp->bundleheight+bp->n )
@@ -1568,8 +1564,7 @@ void iguana_bundlestats(struct supernet_info *myinfo,struct iguana_info *coin,ch
     if ( queue_size(&coin->priorityQ) > 10000 )
     {
         while ( (breq= queue_dequeue(&coin->priorityQ)) != 0 )
-            myfree(breq,sizeof(*breq));
-        //printf("cleared priorityQ\n");
+            free(breq);
     }
 }
 

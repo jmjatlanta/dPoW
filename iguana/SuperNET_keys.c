@@ -14,13 +14,13 @@
  ******************************************************************************/
 
 #include "iguana777.h"
-#include "../includes/tweetnacl.h"
-#include "../crypto777/OS_portable.h"
-#include "../includes/libgfshare.h"
-#include "../includes/utlist.h"
-#include "../includes/uthash.h"
-#include "../includes/curve25519.h"
-#include "../includes/cJSON.h"
+#include "tweetnacl.h"
+#include "crypto777/OS_portable.h"
+#include "libgfshare.h"
+#include "utlist.h"
+#include "uthash.h"
+#include "curve25519.h"
+#include "cJSON.h"
 
 /*
 if ( 0 )

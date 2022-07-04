@@ -21,8 +21,8 @@
 #ifdef FAST_UTHASH
 #undef uthash_malloc
 #undef uthash_free
-#define uthash_malloc(size) ((coin->RTHASHMEM.ptr == 0) ? mycalloc('u',1,size) : iguana_memalloc(&coin->RTHASHMEM,size,1))
-#define uthash_free(mem,size) ((coin->RTHASHMEM.ptr == 0) ? myfree(mem,size) : 0)
+#define uthash_malloc(size) ((coin->RTHASHMEM.ptr == 0) ? calloc(1,size) : iguana_memalloc(&coin->RTHASHMEM,size,1))
+#define uthash_free(mem,size) ((coin->RTHASHMEM.ptr == 0) ? free(mem) : 0)
 #endif
 
 void iguana_RTtxid_free(struct iguana_RTtxid *RTptr)

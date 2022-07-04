@@ -14,19 +14,11 @@
  ******************************************************************************/
 
 #include "iguana777.h"
-//#include "SuperNET.h"
 
 cJSON *helpjson(cJSON *json,cJSON *array,cJSON *agents,char *agentstr,char *method,cJSON *methodargs)
 {
-    cJSON *methodobj,*item; int32_t i,n; char url[2048],curl[2048]; struct supernet_info *myinfo = SuperNET_MYINFO(0);
-    /*if ( *agentstrp == 0 || strcmp(*agentstrp,agentstr) != 0 )
-    {
-        if ( array != 0 )
-            jadd(json,*agentstrp,array);
-        *agentstrp = agentstr;
-        jaddistr(agents,agentstr);
-        printf("add agent.(%s)\n",agentstr);
-    }*/
+    cJSON *methodobj,*item; int32_t i,n; char url[2048],curl[2048]; 
+    struct supernet_info *myinfo = SuperNET_MYINFO(0);
     if ( (n= cJSON_GetArraySize(agents)) > 0 )
     {
         for (i=0; i<n; i++)
@@ -203,7 +195,8 @@ cJSON *SuperNET_helpjson()
 
 int32_t agentform(FILE *fp,char *form,int32_t max,char *agent,cJSON *methoditem)
 {
-    cJSON *item,*fieldsarray; int32_t j,m,width=1,size = 0; struct supernet_info *myinfo = SuperNET_MYINFO(0);
+    cJSON *item,*fieldsarray; int32_t j,m,width=1,size = 0; 
+    struct supernet_info *myinfo = SuperNET_MYINFO(0);
     char *methodstr,*typestr,outstr[2048],outstr2[2048],fields[8192],str[2],agent_method[256],*fieldname;
     form[0] = 0;
     if ( (methodstr= jstr(methoditem,"method")) == 0 )
@@ -506,11 +499,12 @@ char *SuperNET_parser2(struct supernet_info *myinfo, char *agentstr, char *metho
 
 char *SuperNET_parser(struct supernet_info *myinfo,char *agentstr,char *method,cJSON *json,char *remoteaddr)
 {
-    char *coinstr; struct iguana_info *coin = 0;
     if ( remoteaddr != 0 && (remoteaddr[0] == 0 || strcmp(remoteaddr,"127.0.0.1") == 0) )
         remoteaddr = 0;
+    char *coinstr;
     if ( (coinstr= jstr(json,"activecoin")) == 0 && (coinstr= jstr(json,"coin")) == 0 )
         coinstr = myinfo->rpcsymbol;
+    struct iguana_info *coin = 0;
     if ( coinstr != 0 && coinstr[0] != 0 )
         coin = iguana_coinfind(coinstr);
     if ( strcmp(agentstr,"bitcoinrpc") == 0 && coin == 0 )
@@ -628,7 +622,7 @@ return SuperNET_parser2(myinfo, agentstr, method, json, remoteaddr);
 #include "../includes/iguana_apiundefs.h"
     char errstr[512];
     sprintf(errstr,"{\"error\":\"unsupported call\",\"agent\":\"%s\",\"method\":\"%s\"}",agentstr,method);
-    return(clonestr(errstr));
+    return clonestr(errstr);
 #endif
 }
 

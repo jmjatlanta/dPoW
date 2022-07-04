@@ -24,7 +24,8 @@ const char *Hardcoded_coins[][3] = { { "BTC", "bitcoin", "0" }, { "BTCD", "Bitco
 
 struct iguana_info *iguana_coinfind(char *symbol)
 {
-    struct iguana_info *coin=0; uint32_t symbolcrc; struct supernet_info *myinfo = SuperNET_MYINFO(0);
+    struct iguana_info *coin=0; uint32_t symbolcrc; 
+    struct supernet_info *myinfo = SuperNET_MYINFO(0);
     while ( myinfo->allcoins_being_added != 0 )
     {
         sleep(1);
@@ -33,13 +34,7 @@ struct iguana_info *iguana_coinfind(char *symbol)
         sleep(1);
     }
     symbolcrc = calc_crc32(0,symbol,(int32_t)strlen(symbol));
-    //portable_mutex_lock(&myinfo->allcoins_mutex);
-        // debug print for output items and buckets count in uthash hash table
-        // if (myinfo && myinfo->allcoins && myinfo->allcoins->hh.tbl->num_items != 31)  {
-        //     fprintf(stderr, "[---] items: %d, buckets: %d\n",myinfo->allcoins->hh.tbl->num_items, myinfo->allcoins->hh.tbl->num_buckets);
-        // }
-        HASH_FIND(hh,myinfo->allcoins,&symbolcrc,sizeof(coin->symbolcrc),coin);
-    //portable_mutex_unlock(&myinfo->allcoins_mutex);
+    HASH_FIND(hh,myinfo->allcoins,&symbolcrc,sizeof(coin->symbolcrc),coin);
     return(coin);
 }
 
@@ -51,7 +46,7 @@ struct iguana_info *iguana_coinadd(char *symbol,char *name,cJSON *argjson,int32_
         if ( (coin= iguana_coinfind(symbol)) == 0 )
         {
             myinfo->allcoins_being_added = 1;
-            coin = mycalloc('C',1,sizeof(*coin));
+            coin = calloc(1,sizeof(*coin));
             strcpy(coin->getinfostr,"getinfo");
             strcpy(coin->validateaddress,"validateaddress");
             strcpy(coin->estimatefeestr,"estimatefee");
@@ -66,8 +61,6 @@ struct iguana_info *iguana_coinadd(char *symbol,char *name,cJSON *argjson,int32_
             else
             {
                 coin->chain = iguana_chainfind(myinfo,(char *)symbol,argjson,1);
-                //if ( coin->FULLNODE >= 0 )
-                //    coin->chain->userpass[0] = 0;
                 coin->peers = calloc(1,sizeof(*coin->peers));
                 for (j=0; j<IGUANA_MAXPEERS; j++)
                 {
@@ -105,14 +98,6 @@ struct iguana_info *iguana_coinadd(char *symbol,char *name,cJSON *argjson,int32_
     return(coin);
 }
 
-void iguana_recvalloc(struct iguana_info *coin,int32_t numitems)
-{
-    //coin->blocks.ptrs = myrealloc('W',coin->blocks.ptrs,coin->blocks.ptrs==0?0:coin->blocks.maxbits * sizeof(*coin->blocks.ptrs),numitems * sizeof(*coin->blocks.ptrs));
-    //coin->blocks.RO = myrealloc('W',coin->blocks.RO,coin->blocks.RO==0?0:coin->blocks.maxbits * sizeof(*coin->blocks.RO),numitems * sizeof(*coin->blocks.RO));
-    //printf("realloc waitingbits.%d -> %d\n",coin->blocks.maxbits,numitems);
-    //coin->blocks.maxbits = numitems;
-}
-
 double iguana_metric(struct iguana_peer *addr,uint32_t now,double decay)
 {
     int32_t duration; double metric = addr->recvblocks * addr->recvtotal;
@@ -130,8 +115,7 @@ double iguana_metric(struct iguana_peer *addr,uint32_t now,double decay)
 int32_t iguana_peermetrics(struct supernet_info *myinfo,struct iguana_info *coin)
 {
     int32_t i,ind,n; double *sortbuf,sum; uint32_t now; struct iguana_peer *addr,*slowest = 0;
-    //printf("peermetrics\n");
-    sortbuf = mycalloc('s',coin->MAXPEERS,sizeof(double)*2);
+    sortbuf = calloc(coin->MAXPEERS,sizeof(double)*2);
     coin->peers->mostreceived = 0;
     now = (uint32_t)time(NULL);
     for (i=n=0; i<coin->MAXPEERS; i++)
@@ -179,7 +163,7 @@ int32_t iguana_peermetrics(struct supernet_info *myinfo,struct iguana_info *coin
             }
         }
     }
-    myfree(sortbuf,coin->MAXPEERS * sizeof(double) * 2);
+    free(sortbuf);
     return(coin->peers->mostreceived);
 }
 
@@ -250,7 +234,7 @@ uint32_t iguana_updatemetrics(struct supernet_info *myinfo,struct iguana_info *c
 void iguana_emitQ(struct iguana_info *coin,struct iguana_bundle *bp)
 {
     struct iguana_helper *ptr;
-    ptr = mycalloc('i',1,sizeof(*ptr));
+    ptr = calloc(1,sizeof(*ptr));
     ptr->allocsize = sizeof(*ptr);
     ptr->coin = coin;
     ptr->bp = bp, ptr->hdrsi = bp->hdrsi;
@@ -275,7 +259,7 @@ void iguana_bundleQ(struct supernet_info *myinfo,struct iguana_info *coin,struct
     if ( n < coin->MAXBUNDLES )
     {
         bp->queued = (uint32_t)time(NULL);
-        ptr = mycalloc('q',1,sizeof(*ptr));
+        ptr = calloc(1,sizeof(*ptr));
         ptr->allocsize = sizeof(*ptr);
         ptr->coin = coin;
         ptr->bp = bp, ptr->hdrsi = bp->hdrsi;
@@ -291,24 +275,6 @@ void iguana_bundleQ(struct supernet_info *myinfo,struct iguana_info *coin,struct
         bp->queued = 0;
         //printf("MAXBUNDLES.%d reached.%d\n",coin->MAXBUNDLES,n);
     }
-}
-
-void iguana_validateQ(struct iguana_info *coin,struct iguana_bundle *bp)
-{
-    /*struct iguana_helper *ptr;
-    //if ( bp->validated <= 1 )
-    {
-        ptr = mycalloc('i',1,sizeof(*ptr));
-        ptr->allocsize = sizeof(*ptr);
-        ptr->coin = coin;
-        ptr->bp = bp, ptr->hdrsi = bp->hdrsi;
-        ptr->type = 'V';
-        ptr->starttime = (uint32_t)time(NULL);
-        ptr->timelimit = 0;
-        bp->validated = 1;
-        //printf("VALIDATE Q %s bundle.%d[%d] utxofinish.%u balancefinish.%u\n",coin->symbol,ptr->hdrsi,bp->n,bp->utxofinish,bp->balancefinish);
-        queue_enqueue("validateQ",&validateQ,&ptr->DL,0);
-    }*/
 }
 
 int32_t iguana_emitfinished(struct supernet_info *myinfo,struct iguana_info *coin,int32_t queueincomplete)
@@ -712,7 +678,7 @@ void iguana_helper(void *arg)
         free_json(argjson);
     printf("HELPER.%d started arg.(%s) type.%d\n",helperid,(char *)(arg!=0?arg:0),type);
     memset(&MEM,0,sizeof(MEM));
-    MEMB = mycalloc('b',IGUANA_MAXBUNDLESIZE,sizeof(*MEMB));
+    MEMB = calloc(IGUANA_MAXBUNDLESIZE,sizeof(*MEMB));
     sleep(2);
     while ( 1 )
     {
@@ -811,7 +777,7 @@ void iguana_helper(void *arg)
                 }
                 else //if ( coin->active != 0 )
                     printf("helper missing param? %p %p %u\n",ptr->coin,bp,ptr->timelimit);
-                myfree(ptr,ptr->allocsize);
+                free(ptr);
             } else break;
         }
         if ( queue_size(&bundlesQ) > 1 )
@@ -1209,7 +1175,7 @@ int32_t iguana_launchcoin(struct supernet_info *myinfo,char *symbol,cJSON *json,
             maphash = IGUANA_MAPHASHTABLES;
         else maphash = 0;
         iguana_coinargs(symbol,&maxrecvcache,&minconfirms,&maxpeers,&initialheight,&services,&maxrequests,&maxbundles,json);
-        coins = mycalloc('A',1+1,sizeof(*coins));
+        coins = calloc(1+1,sizeof(*coins));
         if ( (coin= iguana_setcoin(symbol,coins,maxpeers,maxrecvcache,services,initialheight,maphash,minconfirms,maxrequests,maxbundles,json,virtcoin)) != 0 )
         {
             if ( iguana_isnotarychain(coin->symbol) < 0 || coin->FULLNODE >= 0 )
@@ -1226,7 +1192,7 @@ int32_t iguana_launchcoin(struct supernet_info *myinfo,char *symbol,cJSON *json,
         else
         {
             printf("launchcoin: couldnt initialize.(%s)\n",symbol);
-            myfree(coins,sizeof(*coins) * 2);
+            free(coins);
             return(-1);
         }
     }
@@ -1249,7 +1215,7 @@ void iguana_coins(void *arg)
         {
             if ( (symbol= jstr(json,"coin")) != 0 && strncmp(symbol,"BTC",3) == 0 )
             {
-                coins = mycalloc('A',1+1,sizeof(*coins));
+                coins = calloc(1+1,sizeof(*coins));
                 if ( (coins[1]= iguana_setcoin(symbol,coins,0,0,0,0,0,0,0,0,json,0)) != 0 )
                 {
                     _iguana_calcrmd160(coins[1],&V);
@@ -1265,7 +1231,7 @@ void iguana_coins(void *arg)
             free_json(json);
             return;
         }
-        coins = mycalloc('A',n+1,sizeof(*coins));
+        coins = calloc(n+1,sizeof(*coins));
         if ( juint(json,"GBavail") < 8 )
             maphash = IGUANA_MAPHASHTABLES;
         else maphash = 0;

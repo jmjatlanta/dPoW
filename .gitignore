@@ -1,8 +1,9 @@
 x64
 *.o
 *.a
-agents/iguana.exe
+bin/*
 Debug/*
+iguana/iguana
 
 
 iguana/pnacl/Release/iguana_unstripped.pexe

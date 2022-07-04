@@ -1,30 +1,32 @@
 CC=clang
 LD=clang
-CFLAGS=-g -Wno-deprecated -O2 -DISNOTARYNODE=1
-CFLAGS_NO_OPTIMIZATION=-Wno-deprecated -c -DISNOTARYNODE=1
+CFLAGS=-g -Wno-deprecated -O2 -DISNOTARYNODE=1 -Iincludes
+CFLAGS_NO_OPTIMIZATION=-Wno-deprecated -c -DISNOTARYNODE=1 -Iincludes
 LDFLAGS=-g -lnanomsg -lcurl -lssl -lcrypto -lpthread -lz -lm -lsodium
 
-all: ../agents ../agents/iguana
+TESTIPADDR=\"78.47.196.146\"
+
+all: iguana
 
 clean:
-	$(RM) ../agents/iguana
+	$(RM) iguana
+	$(RM) gecko/*.o
+	$(RM) datachain/*.o
+	$(RM) basilisk/*.o
 	$(RM) *.o
 	$(RM) *.a
 	$(MAKE) -C secp256k1 clean
-	$(MAKE) -C ../crypto777 clean
-
-../agents:
-	mkdir $@
+	$(MAKE) -C crypto777 clean
 
 secp256k1/secp256k1.a:
 	$(MAKE) -C secp256k1 all
 
-../crypto777/libcrypto777.a:
-	$(MAKE) -C ../crypto777 all
+crypto777/libcrypto777.a:
+	$(MAKE) -C crypto777 all
 
 optimized.a: \
-		../gecko/gecko.o \
-		../datachain/datachain.o \
+		gecko/gecko.o \
+		datachain/datachain.o \
 		iguana_accept.o \
 		iguana_bitmap.o \
 		iguana_blocks.o \
@@ -68,14 +70,25 @@ iguana777.o: iguana777.c
 iguana_bundles.o: iguana_bundles.c
 	$(CC) $(CFLAGS_NO_OPTIMIZATION) -c -o $@ $^
 
-../basilisk/basilisk.o: ../basilisk/basilisk.c
+basilisk/basilisk.o: basilisk/basilisk.c
 	$(CC) $(CFLAGS_NO_OPTIMIZATION) -c -o $@ $^
 
-../agents/iguana: main.o \
+iguana: main.o \
 		iguana777.o \
 		iguana_bundles.o \
-		../basilisk/basilisk.o \
+		basilisk/basilisk.o \
 		optimized.a \
 		secp256k1/secp256k1.a \
-		../crypto777/libcrypto777.a
+		crypto777/libcrypto777.a
 	$(LD) $(LDFLAGS) -o $@ $^
+
+DEXstats: exchanges/stats.o \
+		crypto777/cJSON.o \
+		crypto777/libcrypto777.a \
+		crypto777/jpeg/libjpeg.a
+	$(LD) $(LDFLAGS) -o $@ $^
+
+iguana_test:
+	$(CC) -DNOTARY_TESTMODE=$(TESTIPADDR) -g -Wno-aggressive-loop-optimizations -Wno-deprecated -c -O2 -DLIQUIDITY_PROVIDER=1 -Iincludes *.c gecko/gecko.c datachain/datachain.c
+	$(CC) -DNOTARY_TESTMODE=$(TESTIPADDR) -g -Wno-aggressive-loop-optimizations -Wno-deprecated -c -DLIQUIDITY_PROVIDER=1 -Iincludes main.c iguana777.c iguana_bundles.c basilisk/basilisk.c iguana_ramchain.c
+	$(CC) -g -o $@ *.o ../agents/libcrypto777.a /usr/local/lib/libnanomsg.so -lcurl -lssl -lcrypto -lpthread -lz -lm -lsodium

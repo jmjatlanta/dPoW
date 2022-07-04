@@ -14,7 +14,7 @@
  ******************************************************************************/
 
 #include "iguana777.h"
-#include "../crypto777/jpeg/jpeglib.h"
+#include "crypto777/jpeg/jpeglib.h"
 
 #define NUM_COMBINED 100
 

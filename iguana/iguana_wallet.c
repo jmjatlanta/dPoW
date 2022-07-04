@@ -53,7 +53,7 @@ struct iguana_waddress *iguana_waddressalloc(uint8_t addrtype,char *symbol,char 
 {
     struct iguana_waddress *waddr; int32_t scriptlen;
     scriptlen = (redeemScript != 0) ? ((int32_t)strlen(redeemScript) >> 1) : 0;
-    waddr = mycalloc('w',1,sizeof(*waddr) + scriptlen);
+    waddr = calloc(1,sizeof(*waddr) + scriptlen);
     waddr->addrtype = addrtype;
     strcpy(waddr->coinaddr,coinaddr);
     bitcoin_addr2rmd160(&addrtype,waddr->rmd160,coinaddr);
@@ -83,7 +83,7 @@ struct iguana_waccount *iguana_waccountcreate(struct supernet_info *myinfo,char 
         HASH_FIND(hh,myinfo->wallet,account,len,wacct);
         if ( wacct == 0 )
         {
-            wacct = mycalloc('w',1,sizeof(*wacct) + len);
+            wacct = calloc(1,sizeof(*wacct) + len);
             strcpy(wacct->account,account);
             HASH_ADD_KEYPTR(hh,myinfo->wallet,wacct->account,len,wacct);
             //printf("waccountcreate.(%s) -> wacct.%p\n",account,wacct);
@@ -798,7 +798,7 @@ cJSON *iguana_walletiterate(struct supernet_info *myinfo,struct iguana_info *coi
                 if ( flag < -1 )
                 {
                     HASH_DELETE(hh,wacct->waddr,waddr);
-                    myfree(waddr,sizeof(*waddr) + waddr->scriptlen);
+                    free(waddr);
                 }
             }
             else
@@ -825,7 +825,7 @@ cJSON *iguana_walletiterate(struct supernet_info *myinfo,struct iguana_info *coi
         if ( flag < -1 )
         {
             HASH_DELETE(hh,myinfo->wallet,wacct);
-            myfree(wacct,(int32_t)(sizeof(*wacct) + strlen(wacct->account) + 1));
+            free(wacct);
         }
     }
     if ( myinfo->expiration != 0 )

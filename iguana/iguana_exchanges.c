@@ -741,28 +741,6 @@ char *exchanges777_process(struct exchange_info *exchange,int32_t *retvalp,struc
     return(retstr);
 }
 
-/*void iguana_statemachineupdate(struct supernet_info *myinfo,struct exchange_info *exchange)
-{
-    int32_t timemod,modwidth = 10; struct iguana_info *coin; struct bitcoin_swapinfo *swap,*tmp; struct iguana_bundlereq *req;
-    timemod = time(NULL) % modwidth;
-    coin = iguana_coinfind("BTCD");
-    portable_mutex_lock(&exchange->mutexS);
-    DL_FOREACH_SAFE(exchange->statemachines,swap,tmp)
-    {
-        if ( swap->dead != 0 || swap->mine.dead != 0 || swap->other.dead != 0 )
-            DL_DELETE(exchange->statemachines,swap);
-        else if ( (swap->mine.orderid % modwidth) == timemod )
-            instantdex_statemachine_iter(myinfo,exchange,swap);
-    }
-    portable_mutex_unlock(&exchange->mutexS);
-    while ( (req= queue_dequeue(&exchange->recvQ,0)) != 0 )
-    {
-        if ( instantdex_recvquotes(coin,req,req->hashes,req->n) != 0 )
-            myfree(req->hashes,(req->n+1) * sizeof(*req->hashes)), req->hashes = 0;
-    }
-    //iguana_inv2poll(myinfo,coin);
-}*/
-
 void exchanges777_loop(void *ptr)
 {
     struct supernet_info *myinfo; struct exchange_info *exchange = ptr;
@@ -790,11 +768,9 @@ void exchanges777_loop(void *ptr)
         retstr = 0;
         if ( (req= queue_dequeue(&exchange->requestQ)) != 0 )
         {
-            //printf("dequeued %s.%c\n",exchange->name,req->func);
             if ( req->dead == 0 )
             {
                 retstr = exchanges777_process(exchange,&retval,req);
-                //printf("retval.%d (%p) retstrp.%p timedout.%u\n",retval,retstr,req->retstrp,req->timedout);
                 if ( retval == EXCHANGE777_DONE )
                 {
                     if ( retstr != 0 )
@@ -812,9 +788,6 @@ void exchanges777_loop(void *ptr)
                 {
                     if ( retstr != 0 )
                         free(retstr);
-                    //if ( retval == EXCHANGE777_ISPENDING )
-                    //    queue_enqueue("Xpending",&exchange->pendingQ,&req->DL,0), flag++;
-                    //else
                     if ( retval == EXCHANGE777_REQUEUE )
                         queue_enqueue("requeue",&exchange->requestQ,&req->DL);
                     else
@@ -834,14 +807,8 @@ void exchanges777_loop(void *ptr)
         tradebot_timeslices(exchange);
         if ( time(NULL) > exchange->lastpoll+exchange->pollgap )
         {
-            /*if ( strcmp(exchange->name,"bitcoin") == 0 )
-            {
-                iguana_statemachineupdate(myinfo,exchange);
-                //printf("InstantDEX call update\n");
-            }*/
             if ( (req= queue_dequeue(&exchange->pricesQ)) != 0 )
             {
-                //printf("check %s pricesQ (%s %s)\n",exchange->name,req->base,req->rel);
                 if ( req->dead == 0 )
                 {
                     if ( req->base[0] != 0 )
@@ -855,7 +822,6 @@ void exchanges777_loop(void *ptr)
                         for (i=req->numasks=0; i<req->depth; i++)
                             if ( req->bidasks[(i << 1) + 1].price > SMALLVAL )
                                 req->numasks++;
-//printf("%-10s %s/%s numbids.%d numasks.%d\n",exchange->name,req->base,req->rel,req->numbids,req->numasks);
                         tradebots_processprices(myinfo,exchange,req->base,req->rel,req->bidasks,req->numbids,req->numasks);
                     }
                     queue_enqueue("pricesQ",&exchange->pricesQ,&req->DL);

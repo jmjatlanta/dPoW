@@ -1443,27 +1443,9 @@ void PAX_update(struct PAX_data *dp,double *btcusdp,double *kmdbtcp)
     sprintf(url,"https://poloniex.com/public?command=returnChartData&currencyPair=BTC_KMD&start=%ld&end=9999999999&period=86400",(long)(time(NULL)-3600*24));
     sprintf(url2,"https://poloniex.com/public?command=returnChartData&currencyPair=BTC_BTCD&start=%ld&end=9999999999&period=86400",(long)(time(NULL)-3600*24));
     quandl = 0;//url_json("https://www.quandl.com/api/v1/datasets/BAVERAGE/USD.json?rows=1");
-    if ( 0 && (str= jstr(quandl,"updated_at")) != 0 && (datenum= conv_date(&seconds,str)) > 0 && (array= jarray(&n,quandl,"data")) != 0 )
-    {
-        //printf("datenum.%d data.%d %d\n",datenum,n,cJSON_GetArraySize(array));
-        for (i=0; i<1; i++)
-        {
-            // ["Date","24h Average","Ask","Bid","Last","Total Volume"]
-            // ["2015-07-25",289.27,288.84,288.68,288.87,44978.61]
-            item = jitem(array,i);
-            if ( (dstr= jstr(jitem(item,0),0)) != 0 && (datenum= conv_date(&seconds,dstr)) > 0 )
-            {
-                btcusd = price = jdouble(jitem(item,1),0), ask = jdouble(jitem(item,2),0), bid = jdouble(jitem(item,3),0);
-                close = jdouble(jitem(item,4),0), vol = jdouble(jitem(item,5),0);
-                //fprintf(stderr,"%d.[%d %f %f %f %f %f].%d ",i,datenum,price,ask,bid,close,vol,n);
-            }
-        }
-    }
     if ( 1 )
     {
-        double USD_average,avebid,aveask,bidvol,askvol,highbid,lowask,CMC_average,changes[3]; //struct exchange_quote sortbuf[512]; struct supernet_info *myinfo = SuperNET_MYINFO(0); cJSON *argjson = cJSON_Parse("{}");
-        //aveask = instantdex_aveprice(myinfo,sortbuf,(int32_t)(sizeof(sortbuf)/sizeof(*sortbuf)),&askvol,"KMD","BTC",1,argjson);
-        //avebid = instantdex_aveprice(myinfo,sortbuf,(int32_t)(sizeof(sortbuf)/sizeof(*sortbuf)),&bidvol,"KMD","BTC",-1,argjson);
+        double USD_average,avebid,aveask,bidvol,askvol,highbid,lowask,CMC_average,changes[3]; 
         if ( 0 && avebid > SMALLVAL && aveask > SMALLVAL )
         {
             price = (avebid*bidvol + aveask*askvol) / (bidvol + askvol);

@@ -92,13 +92,13 @@
 struct supernet_info;
 struct exchange_info;
 
-#include "../crypto777/OS_portable.h"
-#include "../datachain/datachain.h"
+#include "crypto777/OS_portable.h"
+#include "datachain/datachain.h"
 
-#include "../includes/iguana_defines.h"
-#include "../includes/iguana_types.h"
-#include "../includes/iguana_structs.h"
-#include "../basilisk/basilisk.h"
+#include "iguana_defines.h"
+#include "iguana_types.h"
+#include "iguana_structs.h"
+#include "basilisk/basilisk.h"
 #include "dPoW.h"
 
 struct supernet_address
@@ -222,9 +222,9 @@ struct basilisk_swap
 
 };
 
-#include "../includes/iguana_funcs.h"
-#include "../includes/iguana_globals.h"
-#include "../gecko/gecko.h"
+#include "iguana_funcs.h"
+#include "iguana_globals.h"
+#include "gecko/gecko.h"
 
 #ifndef MAX
 #define MAX(a,b) ((a) >= (b) ? (a) : (b))
