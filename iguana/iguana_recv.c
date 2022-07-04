@@ -1099,18 +1099,10 @@ int32_t iguana_bundlehashadd(struct iguana_info *coin,struct iguana_bundle *bp,i
     }
     if ( bp->blocks[bundlei] == 0 )
         firstflag = 1;
-    //bp->blocks[bundlei] = block;
-    //bp->hashes[bundlei] = block->RO.hash2;
     iguana_bundlehash2add(coin,0,bp,bundlei,block->RO.hash2);
     if ( firstflag != 0 && bp->emitfinish == 0 )
     {
-        //block->fpos = -1;
-        if ( (0) && iguana_ramchainfile(SuperNET_MYINFO(0),coin,0,&blockR,bp,bundlei,block) == 0 )
-        {
-            size = sizeof(blockR);
-            iguana_ramchain_free(coin,&blockR,1);
-        }
-        else if ( bp->hdrsi > 0 && bp->hdrsi == coin->longestchain/bp->n )
+        if ( bp->hdrsi > 0 && bp->hdrsi == coin->longestchain/bp->n )
         {
             checki = iguana_peerfname(coin,&hdrsi,GLOBAL_TMPDIR,fname,0,block->RO.hash2,zero,1,0);
             if ( (fp= fopen(fname,"rb")) != 0 )
@@ -1123,7 +1115,6 @@ int32_t iguana_bundlehashadd(struct iguana_info *coin,struct iguana_bundle *bp,i
         if ( size != 0 )
         {
             retval = 0;
-            //printf("initialize with fp.[%d:%d] len.%ld\n",bp->hdrsi,bundlei,size);
             block->RO.recvlen = (int32_t)size;
             block->fpipbits = 1;
             block->txvalid = 1;

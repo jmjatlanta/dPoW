@@ -768,11 +768,9 @@ void exchanges777_loop(void *ptr)
         retstr = 0;
         if ( (req= queue_dequeue(&exchange->requestQ)) != 0 )
         {
-            //printf("dequeued %s.%c\n",exchange->name,req->func);
             if ( req->dead == 0 )
             {
                 retstr = exchanges777_process(exchange,&retval,req);
-                //printf("retval.%d (%p) retstrp.%p timedout.%u\n",retval,retstr,req->retstrp,req->timedout);
                 if ( retval == EXCHANGE777_DONE )
                 {
                     if ( retstr != 0 )
@@ -790,9 +788,6 @@ void exchanges777_loop(void *ptr)
                 {
                     if ( retstr != 0 )
                         free(retstr);
-                    //if ( retval == EXCHANGE777_ISPENDING )
-                    //    queue_enqueue("Xpending",&exchange->pendingQ,&req->DL,0), flag++;
-                    //else
                     if ( retval == EXCHANGE777_REQUEUE )
                         queue_enqueue("requeue",&exchange->requestQ,&req->DL);
                     else
@@ -812,14 +807,8 @@ void exchanges777_loop(void *ptr)
         tradebot_timeslices(exchange);
         if ( time(NULL) > exchange->lastpoll+exchange->pollgap )
         {
-            /*if ( strcmp(exchange->name,"bitcoin") == 0 )
-            {
-                iguana_statemachineupdate(myinfo,exchange);
-                //printf("InstantDEX call update\n");
-            }*/
             if ( (req= queue_dequeue(&exchange->pricesQ)) != 0 )
             {
-                //printf("check %s pricesQ (%s %s)\n",exchange->name,req->base,req->rel);
                 if ( req->dead == 0 )
                 {
                     if ( req->base[0] != 0 )
@@ -833,7 +822,6 @@ void exchanges777_loop(void *ptr)
                         for (i=req->numasks=0; i<req->depth; i++)
                             if ( req->bidasks[(i << 1) + 1].price > SMALLVAL )
                                 req->numasks++;
-//printf("%-10s %s/%s numbids.%d numasks.%d\n",exchange->name,req->base,req->rel,req->numbids,req->numasks);
                         tradebots_processprices(myinfo,exchange,req->base,req->rel,req->bidasks,req->numbids,req->numasks);
                     }
                     queue_enqueue("pricesQ",&exchange->pricesQ,&req->DL);

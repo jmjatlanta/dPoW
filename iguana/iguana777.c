@@ -24,7 +24,8 @@ const char *Hardcoded_coins[][3] = { { "BTC", "bitcoin", "0" }, { "BTCD", "Bitco
 
 struct iguana_info *iguana_coinfind(char *symbol)
 {
-    struct iguana_info *coin=0; uint32_t symbolcrc; struct supernet_info *myinfo = SuperNET_MYINFO(0);
+    struct iguana_info *coin=0; uint32_t symbolcrc; 
+    struct supernet_info *myinfo = SuperNET_MYINFO(0);
     while ( myinfo->allcoins_being_added != 0 )
     {
         sleep(1);
@@ -33,13 +34,7 @@ struct iguana_info *iguana_coinfind(char *symbol)
         sleep(1);
     }
     symbolcrc = calc_crc32(0,symbol,(int32_t)strlen(symbol));
-    //portable_mutex_lock(&myinfo->allcoins_mutex);
-        // debug print for output items and buckets count in uthash hash table
-        // if (myinfo && myinfo->allcoins && myinfo->allcoins->hh.tbl->num_items != 31)  {
-        //     fprintf(stderr, "[---] items: %d, buckets: %d\n",myinfo->allcoins->hh.tbl->num_items, myinfo->allcoins->hh.tbl->num_buckets);
-        // }
-        HASH_FIND(hh,myinfo->allcoins,&symbolcrc,sizeof(coin->symbolcrc),coin);
-    //portable_mutex_unlock(&myinfo->allcoins_mutex);
+    HASH_FIND(hh,myinfo->allcoins,&symbolcrc,sizeof(coin->symbolcrc),coin);
     return(coin);
 }
 
@@ -66,8 +61,6 @@ struct iguana_info *iguana_coinadd(char *symbol,char *name,cJSON *argjson,int32_
             else
             {
                 coin->chain = iguana_chainfind(myinfo,(char *)symbol,argjson,1);
-                //if ( coin->FULLNODE >= 0 )
-                //    coin->chain->userpass[0] = 0;
                 coin->peers = calloc(1,sizeof(*coin->peers));
                 for (j=0; j<IGUANA_MAXPEERS; j++)
                 {

@@ -519,12 +519,11 @@ static char *BASERELS[][2] = { {"btcd","btc"}, {"nxt","btc"}, {"asset","btc"} };
 
 double UPDATE(struct exchange_info *exchange,char *base,char *rel,struct exchange_quote *bidasks,int32_t maxdepth,double commission,cJSON *argjson,int32_t invert)
 {
-    cJSON *retjson,*bids,*asks; double hbla; struct supernet_info *myinfo;
-    myinfo = SuperNET_MYINFO(0);
+    cJSON *retjson,*bids,*asks; 
+    double hbla; 
+    struct supernet_info *myinfo = SuperNET_MYINFO(0);
     bids = cJSON_CreateArray();
     asks = cJSON_CreateArray();
-    //instantdex_offerfind(myinfo,exchange,bids,asks,0,base,rel,0);
-    //printf("bids.(%s) asks.(%s)\n",jprint(bids,0),jprint(asks,0));
     retjson = cJSON_CreateObject();
     cJSON_AddItemToObject(retjson,"bids",bids);
     cJSON_AddItemToObject(retjson,"asks",asks);
@@ -597,108 +596,32 @@ int32_t is_valid_BTCother(char *other)
 
 uint64_t TRADE(int32_t dotrade,char **retstrp,struct exchange_info *exchange,char *base,char *rel,int32_t dir,double price,double volume,cJSON *argjson)
 {
-    //char *str,*retstr,coinaddr[64]; int32_t added; uint64_t txid = 0; cJSON *json=0; struct instantdex_accept *ap; struct supernet_info *myinfo; struct iguana_info *other;
-    //myinfo = SuperNET_MYINFO(0);//SuperNET_accountfind(argjson);
-    //printf("TRADE with myinfo.%p\n",myinfo);
     if ( retstrp != 0 )
         *retstrp = 0;
-    /*if ( strcmp(base,"BTC") == 0 || strcmp(base,"btc") == 0 )
-    {
-        base = rel;
-        rel = "BTC";
-        dir = -dir;
-        volume *= price;
-        price = 1. / price;
-    }
-    if ( is_valid_BTCother(base) != 0 && (strcmp(rel,"BTC") == 0 || strcmp(rel,"btc") == 0) )
-    {
-        if ( dotrade == 0 )
-        {
-            if ( retstrp != 0 )
-                *retstrp = clonestr("{\"result\":\"would issue new trade\"}");
-        }
-        else
-        {
-            if ( (other= iguana_coinfind(base)) != 0 )
-            {
-                //bitcoin_pubkey33(0,pubkey,myinfo->persistent_priv);
-                bitcoin_address(coinaddr,other->chain->pubtype,myinfo->persistent_pubkey33,33);
-                jaddstr(argjson,base,coinaddr);
-            }
-            else if ( strcmp(base,"NXT") == 0 || (is_decimalstr(base) > 0 && strlen(base) > 13) )
-            {
-                printf("NXT is not yet\n");
-                return(0);
-            }
-            else return(0);
-            json = cJSON_CreateObject();
-            jaddstr(json,"base",base);
-            jaddstr(json,"rel","BTC");
-            jaddnum(json,dir > 0 ? "maxprice" : "minprice",price);
-            jaddnum(json,"volume",volume);
-            jaddstr(json,"BTC",myinfo->myaddr.BTC);
-            jaddnum(json,"minperc",jdouble(argjson,"minperc"));
-            printf("trade dir.%d (%s/%s) %.6f vol %.8f\n",dir,base,"BTC",price,volume);
-            if ( (str= instantdex_createaccept(myinfo,&ap,exchange,base,"BTC",price,volume,-dir,dir > 0 ? "BTC" : base,INSTANTDEX_OFFERDURATION,myinfo->myaddr.nxt64bits,jdouble(argjson,"minperc"))) != 0 && ap != 0 )
-            {
-                retstr = instantdex_checkoffer(myinfo,&added,&txid,exchange,ap,json);
-                free(str);
-                if ( added == 0 )
-                    free(ap);
-            } else printf("null return queueaccept\n");
-            if ( retstrp != 0 )
-                *retstrp = retstr;
-        }
-    }
-    return(txid);*/
     return(0);
 }
 
 char *ORDERSTATUS(struct exchange_info *exchange,uint64_t orderid,cJSON *argjson)
 {
-    //struct instantdex_accept *ap; struct bitcoin_swapinfo *swap;
     cJSON *retjson;
     retjson = cJSON_CreateObject();
-    struct supernet_info *myinfo;// = SuperNET_accountfind(argjson);
-    myinfo = SuperNET_MYINFO(0);//SuperNET_accountfind(argjson);
-    /*if ( (swap= instantdex_statemachinefind(myinfo,exchange,orderid)) != 0 )
-        jadd(retjson,"result",instantdex_statemachinejson(swap));
-    else if ( (ap= instantdex_offerfind(myinfo,exchange,0,0,orderid,"*","*",0)) != 0 )
-        jadd(retjson,"result",instantdex_acceptjson(ap));
-    else if ( (swap= instantdex_historyfind(myinfo,exchange,orderid)) != 0 )
-        jadd(retjson,"result",instantdex_historyjson(swap));
-    else jaddstr(retjson,"error","couldnt find orderid");*/
-    return(jprint(retjson,1));
+    struct supernet_info *myinfo = SuperNET_MYINFO(0);
+    return jprint(retjson,1);
 }
 
 char *CANCELORDER(struct exchange_info *exchange,uint64_t orderid,cJSON *argjson)
 {
-    //struct instantdex_accept *ap = 0;  struct bitcoin_swapinfo *swap=0;
     cJSON *retjson;
-    //struct supernet_info *myinfo;// = SuperNET_accountfind(argjson);
-    //myinfo = SuperNET_MYINFO(0);//SuperNET_accountfind(argjson);
     retjson = cJSON_CreateObject();
-    /*if ( (ap= instantdex_offerfind(myinfo,exchange,0,0,orderid,"*","*",0)) != 0 )
-    {
-        ap->dead = (uint32_t)time(NULL);
-        jadd(retjson,"orderid",instantdex_acceptjson(ap));
-        jaddstr(retjson,"result","killed orderid, but might have pending");
-    }
-    else if ( (swap= instantdex_statemachinefind(myinfo,exchange,orderid)) != 0 )
-    {
-        jadd(retjson,"orderid",instantdex_statemachinejson(swap));
-        jaddstr(retjson,"result","killed statemachine orderid, but might have pending");
-    }*/
     return(jprint(retjson,1));
 }
 
 char *OPENORDERS(struct exchange_info *exchange,cJSON *argjson)
 {
-    cJSON *retjson,*bids,*asks; struct supernet_info *myinfo;// = SuperNET_accountfind(argjson);
-    myinfo = SuperNET_MYINFO(0);//SuperNET_accountfind(argjson);
+    cJSON *retjson,*bids,*asks; struct supernet_info *myinfo;
+    myinfo = SuperNET_MYINFO(0);
     bids = cJSON_CreateArray();
     asks = cJSON_CreateArray();
-    //instantdex_offerfind(myinfo,exchange,bids,asks,0,"*","*",0);
     retjson = cJSON_CreateObject();
     jaddstr(retjson,"result","success");
     jadd(retjson,"bids",bids);
@@ -720,7 +643,6 @@ char *TRADEHISTORY(struct exchange_info *exchange,cJSON *argjson)
 
 char *WITHDRAW(struct exchange_info *exchange,char *base,double amount,char *destaddr,cJSON *argjson)
 {
-    //struct supernet_info *myinfo = SuperNET_accountfind(argjson);
     // invoke conversion or transfer!
     return(clonestr("{\"error\":\"what does it mean to withdraw bitcoins that are in your wallet\"}"));
 }

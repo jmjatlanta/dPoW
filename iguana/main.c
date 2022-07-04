@@ -76,34 +76,30 @@ void SuperNET_hex2str(char *str,uint8_t *hex,int32_t len)
 }
 
 void *bitcoin_ctx();
+
+/****
+ * @brief get this node's struct (create if it does not exist)
+ * @param passphrase unused
+ * @return a pointer to the global
+ */
 struct supernet_info *SuperNET_MYINFO(char *passphrase)
 {
-    //int32_t i;
     if ( MYINFO.ctx == 0 )
     {
-        //for (i=0; i<sizeof(MYINFO.ctx)/sizeof(*MYINFO.ctx); i++)
-        //    MYINFO.ctx[i] = bitcoin_ctx();
         OS_randombytes(MYINFO.privkey.bytes,sizeof(MYINFO.privkey));
         MYINFO.myaddr.pubkey = curve25519(MYINFO.privkey,curve25519_basepoint9());
         printf("SuperNET_MYINFO: generate session keypair\n");
         MYINFO.NOTARY.RELAYID = -1;
     }
-    if ( passphrase == 0 || passphrase[0] == 0 )
-        return(&MYINFO);
-    else
-    {
-        // search saved accounts
-    }
     return(&MYINFO);
-    return(0);
 }
 
 struct supernet_info *SuperNET_MYINFOfind(int32_t *nump,bits256 pubkey)
 {
-    int32_t i;
     *nump = 0;
     if ( MYINFOS != 0 )
     {
+        int32_t i;
         for (i=0; MYINFOS[i]!=0; i++)
         {
             *nump = i;
@@ -112,19 +108,7 @@ struct supernet_info *SuperNET_MYINFOfind(int32_t *nump,bits256 pubkey)
         }
         *nump = i;
     }
-    return(0);
-}
-
-int32_t SuperNET_MYINFOS(struct supernet_info **myinfos,int32_t max)
-{
-    int32_t i = 0;
-    if ( MYINFOS != 0 )
-    {
-        for (i=0; i<max; i++)
-            if ( (myinfos[i]= MYINFOS[i]) == 0 )
-                break;
-    }
-    return(i);
+    return 0;
 }
 
 void SuperNET_MYINFOadd(struct supernet_info *myinfo)
@@ -155,22 +139,33 @@ char *iguana_JSON(void *_myinfo,void *_coin,char *jsonstr,uint16_t port)
     return(retstr);
 }
 
+/***
+ * @brief parse JSON into a supernet_info struct
+ * @param myinfo the struct to place the data into
+ * @param jsonstr the JSON
+ * @param remoteaddr
+ * @param port
+ * @return ??
+ */
 char *SuperNET_jsonstr(struct supernet_info *myinfo,char *jsonstr,char *remoteaddr,uint16_t port)
 {
-    cJSON *json; char *agent,*method,*retstr = 0;
-    //printf("SuperNET_jsonstr.(%s)\n",jsonstr);
-    if ( (json= cJSON_Parse(jsonstr)) != 0 )
+    char *retstr = 0;
+    cJSON *json = cJSON_Parse(jsonstr);
+    if ( json != 0 )
     {
-        method = jstr(json,"method");
-        if ( (agent= jstr(json,"agent")) != 0 && method != 0 && jobj(json,"params") == 0 )
+        char *method = jstr(json,"method");
+        char *agent = jstr(json, "agent");
+        if ( agent != 0 && method != 0 && jobj(json,"params") == 0 )
             retstr = SuperNET_parser(myinfo,agent,method,json,remoteaddr);
         else if ( method != 0 && is_bitcoinrpc(myinfo,method,remoteaddr) >= 0 )
             retstr = iguana_bitcoinRPC(myinfo,method,json,remoteaddr,port);
-        else retstr = clonestr("{\"error\":\"need both agent and method\"}");
+        else 
+            retstr = clonestr("{\"error\":\"need both agent and method\"}");
         free_json(json);
-    } else retstr = clonestr("{\"error\":\"couldnt parse SuperNET_JSON\"}");
-    //printf("SuperNET_jsonstr ret.(%s)\n",retstr);
-    return(retstr);
+    } 
+    else 
+        retstr = clonestr("{\"error\":\"couldnt parse SuperNET_JSON\"}");
+    return retstr;
 }
 
 int32_t iguana_jsonQ(struct supernet_info *myinfo,struct iguana_info *coin)
@@ -558,56 +553,6 @@ void iguana_accounts(char *keytype)
     }
 }
 
-void iguana_appletests(struct supernet_info *myinfo)
-{
-    char *str;
-    //iguana_chaingenesis(1,1403138561,0x1e0fffff,8359109,bits256_conv("fd1751cc6963d88feca94c0d01da8883852647a37a0a67ce254d62dd8c9d5b2b")); // BTCD
-    if ( (0) )
-    {
-    char genesisblock[1024];
-    //iguana_chaingenesis("VPN",0,bits256_conv("00000ac7d764e7119da60d3c832b1d4458da9bc9ef9d5dd0d91a15f690a46d99"),genesisblock,"scrypt",1,1409839200,0x1e0fffff,64881664,bits256_conv("698a93a1cacd495a7a4fb3864ad8d06ed4421dedbc57f9aaad733ea53b1b5828")); // VPN
-    
-    iguana_chaingenesis(myinfo,"LTC",0,0,0,bits256_conv("12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2"),genesisblock,"sha256",1,1317972665,0x1e0ffff0,2084524493,bits256_conv("97ddfbbae6be97fd6cdf3e7ca13232a3afff2353e29badfab7f73011edd4ced9")); // LTC
-        //char *Str = "01000000f615f7ce3b4fc6b8f61e8f89aedb1d0852507650533a9e3b10b9bbcc30639f279fcaa86746e1ef52d3edb3c4ad8259920d509bd073605c9bf1d59983752a6b06b817bb4ea78e011d012d59d4";
-        // https://litecoin.info/Scrypt  0000000110c8357966576df46f3b802ca897deb7ad18b12f1c24ecff6386ebd9
-        //uint8_t buf[1000]; bits256 shash,hash2; char str[65],str2[65];
-        //decode_hex(buf,(int32_t)strlen(Str)>>1,Str);
-        //calc_scrypthash(shash.uints,buf);
-        //blockhash_sha256(&hash2,buf,80);
-        //printf("shash -> %s sha256x2 %s\n",bits256_str(str,shash),bits256_str(str2,hash2));
-    getchar();
-    }
-    if ( 1 )
-    {
-        /*int32_t i; ;bits256 hash2; uint8_t pubkey[33];
-        double startmillis = OS_milliseconds();
-        for (i=0; i<1000; i++)
-            hash2 = curve25519_shared(hash2,rand256(0));
-        printf("curve25519 elapsed %.3f for %d iterations\n",OS_milliseconds() - startmillis,i);
-        startmillis = OS_milliseconds();
-        bitcoin_pubkey33(myinfo->ctx,pubkey,hash2);
-        for (i=0; i<1000; i++)
-            bitcoin_sharedsecret(myinfo->ctx,hash2,pubkey,33);
-        printf("secp256k1 elapsed %.3f for %d iterations\n",OS_milliseconds() - startmillis,i);
-       getchar();**/
-        if ( (0) && (str= SuperNET_JSON(myinfo,iguana_coinfind("BTCD"),cJSON_Parse("{\"protover\":70002,\"RELAY\":1,\"VALIDATE\":1,\"portp2p\":14631,\"rpc\":14632,\"agent\":\"iguana\",\"method\":\"addcoin\",\"startpend\":512,\"endpend\":512,\"services\":129,\"maxpeers\":8,\"newcoin\":\"BTCD\",\"active\":1,\"numhelpers\":1,\"poll\":100}"),0,myinfo->rpcport)) != 0 )
-        {
-            free(str);
-            if ( 1 && (str= SuperNET_JSON(myinfo,iguana_coinfind("BTC"),cJSON_Parse("{\"portp2p\":8333,\"RELAY\":0,\"VALIDATE\":0,\"agent\":\"iguana\",\"method\":\"addcoin\",\"startpend\":1,\"endpend\":1,\"services\":128,\"maxpeers\":8,\"newcoin\":\"BTC\",\"active\":0,\"numhelpers\":1,\"poll\":100}"),0,myinfo->rpcport)) != 0 )
-            {
-                free(str);
-                if ( (0) && (str= SuperNET_JSON(myinfo,iguana_coinfind("BTCD"),cJSON_Parse("{\"agent\":\"SuperNET\",\"method\":\"login\",\"handle\":\"alice\",\"password\":\"alice\",\"passphrase\":\"alice\"}"),0,myinfo->rpcport)) != 0 )
-                {
-                    free(str);
-                    if ( (str= SuperNET_JSON(myinfo,iguana_coinfind("BTCD"),cJSON_Parse("{\"agent\":\"SuperNET\",\"method\":\"login\",\"handle\":\"bob\",\"password\":\"bob\",\"passphrase\":\"bob\"}"),0,myinfo->rpcport)) != 0 )
-                        free(str);
-                }
-            }
-        }
-        sleep(1);
-    }
-}
-
 int32_t iguana_commandline(struct supernet_info *myinfo,char *arg)
 {
     cJSON *argjson,*array; char *coinargs,*argstr=0,*str; int32_t i,n; long filesize = 0;
@@ -633,7 +578,6 @@ int32_t iguana_commandline(struct supernet_info *myinfo,char *arg)
     {
         if ( arg[0] == '{' || arg[0] == '[' )
             argstr = arg;
-        //else argstr = OS_filestr(&filesize,arg);
         if ( argstr != 0 && (argjson= cJSON_Parse(argstr)) != 0 )
         {
             IGUANA_NUMHELPERS = juint(argjson,"numhelpers");
@@ -675,9 +619,7 @@ int32_t iguana_commandline(struct supernet_info *myinfo,char *arg)
                 }
                 printf(") <- IOTA random passphrase\n");
             }
-        } //else printf("error parsing.(%s)\n",(char *)argstr);
-        //if ( argstr != arg )
-        //    free(argstr);
+        }
     }
     return(COMMANDLINE_ARGFILE != 0);
 }
@@ -709,7 +651,6 @@ void iguana_Qinit()
     iguana_initQ(&FINISHED_Q,"finishedQ");
     iguana_initQ(&bundlesQ,"bundlesQ");
     iguana_initQ(&emitQ,"emitQ");
-    //iguana_initQ(&TerminateQ,"TerminateQ");
 }
 
 void iguana_helpinit(struct supernet_info *myinfo)
@@ -772,7 +713,6 @@ void jumblr_loop(void *ptr)
                     // if BTC has arrived in deposit address, invoke DEX -> KMD
                     jumblr_iteration(myinfo,coin,(t % (360 * mult)) / (120 * mult),t % (120 * mult));
                 }
-                //printf("t.%u %p.%d %s\n",t,coin,coin!=0?coin->FULLNODE:0,myinfo->jumblr_passphrase);
             }
         }
         sleep(55);
@@ -814,15 +754,6 @@ void dpow_loop(void *arg)
 void iguana_launchdaemons(struct supernet_info *myinfo)
 {
     int32_t i; char *helperargs,helperstr[512];
-    /*if ( IGUANA_NUMHELPERS == 0 )//|| COMMANDLINE_ARGFILE != 0 )
-        IGUANA_NUMHELPERS = 1;
-    for (i=0; i<IGUANA_NUMHELPERS; i++)
-    {
-        sprintf(helperstr,"{\"helperid\":%d}",i);
-        helperargs = clonestr(helperstr);
-        printf("helper launch[%d] of %d (%s)\n",i,IGUANA_NUMHELPERS,helperstr);
-        iguana_launch(0,"iguana_helper",iguana_helper,helperargs,IGUANA_PERMTHREAD);
-    } */
     if ( COMMANDLINE_ARGFILE == 0 )
         iguana_launch(0,"rpcloop",iguana_rpcloop,myinfo,IGUANA_PERMTHREAD); // limit to oneprocess
     printf("launch mainloop\n");
@@ -830,23 +761,6 @@ void iguana_launchdaemons(struct supernet_info *myinfo)
     OS_thread_create(malloc(sizeof(pthread_t)),NULL,(void *)dpow_loop,(void *)myinfo);
     OS_thread_create(malloc(sizeof(pthread_t)),NULL,(void *)dpow_psockloop,(void *)myinfo);
     mainloop(myinfo);
-}
-
-int32_t iguana_isbigendian()
-{
-    int32_t i,littleendian,bigendian; uint64_t val = 0x0001020304050607;
-    for (i=bigendian=littleendian=0; i<sizeof(val); i++)
-    {
-        if ( ((uint8_t *)&val)[i] == i )
-            bigendian++;
-        else if ( ((uint8_t *)&val)[sizeof(val)-1-i] == i )
-            littleendian++;
-    }
-    if ( littleendian == sizeof(val) )
-        return(0);
-    else if ( bigendian == sizeof(val) )
-        return(1);
-    else return(-1);
 }
 
 void *SuperNET_deciphercalc(void **ptrp,int32_t *msglenp,bits256 privkey,bits256 srcpubkey,uint8_t *cipher,int32_t cipherlen,uint8_t *buf,int32_t bufsize)
@@ -960,24 +874,6 @@ cJSON *SuperNET_rosettajson(struct supernet_info *myinfo,bits256 privkey,int32_t
             }
         }
     }
-    /*if ( bitcoin_address(addr,0,pub,33) != 0 )
-    {
-        jaddstr(retjson,"BTC",addr);
-        if ( showprivs != 0 )
-        {
-            bitcoin_priv2wif(wifbuf,privkey,128);
-            jaddstr(retjson,"BTCwif",wifbuf);
-        }
-    }
-    if ( bitcoin_address(addr,60,pub,33) != 0 )
-    {
-        jaddstr(retjson,"BTCD",addr);
-        if ( showprivs != 0 )
-        {
-            bitcoin_priv2wif(wifbuf,privkey,188);
-            jaddstr(retjson,"BTCDwif",wifbuf);
-        }
-    }*/
     if ( showprivs != 0 )
         jaddbits256(retjson,"privkey",privkey);
     return(retjson);
@@ -1087,7 +983,8 @@ STRING_ARG(iguana,initfastfind,activecoin)
 
 TWO_STRINGS_AND_TWO_DOUBLES(iguana,balance,activecoin,address,lastheightd,minconfd)
 {
-    int32_t lastheight,minconf,maxconf=1<<30; cJSON *array,*retjson = cJSON_CreateObject();
+    int32_t lastheight,minconf,maxconf=1<<30; 
+    cJSON *array,*retjson = cJSON_CreateObject();
     if ( activecoin != 0 && activecoin[0] != 0 )
         coin = iguana_coinfind(activecoin);
     if ( coin != 0 )
@@ -1114,7 +1011,9 @@ TWO_STRINGS_AND_TWO_DOUBLES(iguana,balance,activecoin,address,lastheightd,mincon
 
 STRING_ARG(iguana,validate,activecoin)
 {
-    int32_t i,total,validated; struct iguana_bundle *bp; cJSON *retjson;
+    int32_t i,total,validated; 
+    struct iguana_bundle *bp; 
+    cJSON *retjson;
     if ( (coin= iguana_coinfind(activecoin)) != 0 )
     {
         for (i=total=validated=0; i<coin->bundlescount; i++)
@@ -1136,7 +1035,9 @@ STRING_ARG(iguana,validate,activecoin)
 
 STRING_ARG(iguana,removecoin,activecoin)
 {
-    struct iguana_bundle *bp; int32_t i,height; char fname[1024];
+    struct iguana_bundle *bp; 
+    int32_t i,height; 
+    char fname[1024];
     if ( (coin= iguana_coinfind(activecoin)) != 0 )
     {
         coin->active = 0;
@@ -1183,7 +1084,12 @@ INT_ARG(bitcoinrpc,getblockhash,height)
 
 HASH_AND_TWOINTS(bitcoinrpc,getblock,blockhash,verbose,remoteonly)
 {
-    char *blockstr,*datastr; struct iguana_msgblock msg; struct iguana_block *block; cJSON *retjson; bits256 txid; int32_t len;
+    char *blockstr,*datastr; 
+    struct iguana_msgblock msg; 
+    struct iguana_block *block; 
+    cJSON *retjson; 
+    bits256 txid; 
+    int32_t len;
     if ( coin->notarychain >= 0 && coin->FULLNODE == 0 )
         return(_dex_getblock(myinfo,coin->symbol,blockhash));
     retjson = cJSON_CreateObject();
@@ -1232,7 +1138,6 @@ ZERO_ARGS(bitcoinrpc,getbestblockhash)
 ZERO_ARGS(bitcoinrpc,getblockcount)
 {
     cJSON *retjson = cJSON_CreateObject();
-    //printf("result %d\n",coin->blocks.hwmchain.height);
     jaddnum(retjson,"result",coin->blocks.hwmchain.height);
     return(jprint(retjson,1));
 }
@@ -1247,10 +1152,13 @@ STRING_AND_INT(iguana,bundleaddresses,activecoin,height)
 
 STRING_AND_INT(iguana,PoSweights,activecoin,height)
 {
-    struct iguana_info *ptr; int32_t num,nonz,errs,bundleheight; struct iguana_pkhash *refP; uint64_t *weights,supply; cJSON *retjson;
+    struct iguana_info *ptr; 
+    int32_t num,nonz,errs,bundleheight; 
+    struct iguana_pkhash *refP; 
+    uint64_t *weights,supply; 
+    cJSON *retjson;
     if ( (ptr= iguana_coinfind(activecoin)) != 0 )
     {
-        //for (bundleheight=coin->chain->bundlesize; bundleheight<height; bundleheight+=coin->chain->bundlesize)
         {
             bundleheight = (height / ptr->chain->bundlesize) * ptr->chain->bundlesize;
             if ( (weights= iguana_PoS_weights(myinfo,ptr,&refP,&supply,&num,&nonz,&errs,bundleheight)) != 0 )
@@ -1272,7 +1180,16 @@ STRING_AND_INT(iguana,PoSweights,activecoin,height)
 
 STRING_ARG(iguana,stakers,activecoin)
 {
-    struct iguana_info *ptr; int32_t i,datalen,pkind,hdrsi; bits256 hash2; struct iguana_bundle *bp; cJSON *retjson,*array; struct iguana_pkhash *refP; struct iguana_ramchaindata *rdata; char coinaddr[64]; uint8_t refrmd160[20]; bits256 *sortbuf;
+    struct iguana_info *ptr; 
+    int32_t i,datalen,pkind,hdrsi; 
+    bits256 hash2; 
+    struct iguana_bundle *bp; 
+    cJSON *retjson,*array; 
+    struct iguana_pkhash *refP; 
+    struct iguana_ramchaindata *rdata; 
+    char coinaddr[64]; 
+    uint8_t refrmd160[20]; 
+    bits256 *sortbuf;
     if ( (ptr= iguana_coinfind(activecoin)) != 0 && ptr->RTheight > ptr->chain->bundlesize )
     {
         hdrsi = (ptr->RTheight / ptr->chain->bundlesize) - 1;
@@ -1304,7 +1221,11 @@ STRING_ARG(iguana,stakers,activecoin)
 
 STRING_AND_INT(iguana,bundlehashes,activecoin,height)
 {
-    struct iguana_info *ptr; struct iguana_bundle *bp; int32_t i,hdrsi; cJSON *retjson,*array; struct iguana_ramchaindata *rdata;
+    struct iguana_info *ptr; 
+    struct iguana_bundle *bp; 
+    int32_t i,hdrsi; 
+    cJSON *retjson,*array; 
+    struct iguana_ramchaindata *rdata;
     if ( (ptr= iguana_coinfind(activecoin)) != 0 )
     {
         hdrsi = height / coin->chain->bundlesize;
@@ -1473,10 +1394,6 @@ TWO_STRINGS(SuperNET,decryptjson,password,permanentfile)
         wallet2priv = bits256_conv(fname2);
     if ( (retjson= SuperNET_decryptedjson(destfname,pass,sizeof(pass),wallethash,fname2,sizeof(fname2),wallet2priv)) != 0 )
     {
-        //printf("decrypt pass.(%s) fname2.(%s) -> destfname.(%s)\n",pass,fname2,destfname);
-        //obj = jduplicate(jobj(retjson,"payload"));
-        //jdelete(retjson,"payload");
-        //jadd(retjson,"result",obj);
         return(jprint(retjson,1));
     } else return(clonestr("{\"error\":\"couldnt decrypt json file\"}"));
 }
@@ -1487,7 +1404,6 @@ THREE_STRINGS(SuperNET,encryptjson,password,permanentfile,payload)
     safecopy(pass,password,sizeof(pass));
     safecopy(fname2,permanentfile,sizeof(fname2));
     argjson = jduplicate(json);
-    //printf("argjson.(%s)\n",jprint(argjson,0));
     jdelete(argjson,"agent");
     jdelete(argjson,"method");
     jdelete(argjson,"password");
@@ -1506,7 +1422,9 @@ THREE_STRINGS(SuperNET,encryptjson,password,permanentfile,payload)
 
 STRING_ARG(SuperNET,addr2rmd160,address)
 {
-    uint8_t addrtype,rmd160[20]; char rmdstr[41]; cJSON *retjson;
+    uint8_t addrtype,rmd160[20]; 
+    char rmdstr[41]; 
+    cJSON *retjson;
     bitcoin_addr2rmd160(&addrtype,rmd160,address);
     init_hexbytes_noT(rmdstr,rmd160,sizeof(rmd160));
     retjson = cJSON_CreateObject();
@@ -1518,7 +1436,9 @@ STRING_ARG(SuperNET,addr2rmd160,address)
 
 STRING_ARG(SuperNET,rmd160conv,rmd160)
 {
-    uint8_t rmdbuf[20]; char coinaddr[64],p2shaddr[64]; cJSON *retjson = cJSON_CreateObject();
+    uint8_t rmdbuf[20]; 
+    char coinaddr[64],p2shaddr[64]; 
+    cJSON *retjson = cJSON_CreateObject();
     if ( rmd160 != 0 && strlen(rmd160) == 40 )
     {
         decode_hex(rmdbuf,20,rmd160);
@@ -1533,7 +1453,10 @@ STRING_ARG(SuperNET,rmd160conv,rmd160)
 
 HASH_AND_INT(SuperNET,priv2pub,privkey,addrtype)
 {
-    cJSON *retjson; bits256 pub; uint8_t pubkey[33]; char coinaddr[64],pubkeystr[67];
+    cJSON *retjson; 
+    bits256 pub; 
+    uint8_t pubkey[33]; 
+    char coinaddr[64],pubkeystr[67];
     if ( remoteaddr != 0 )
         return(clonestr("{\"error\":\"no remote\"}"));
     retjson = cJSON_CreateObject();
@@ -1549,7 +1472,8 @@ HASH_AND_INT(SuperNET,priv2pub,privkey,addrtype)
 
 ZERO_ARGS(SuperNET,keypair)
 {
-    cJSON *retjson; bits256 pubkey,privkey;
+    cJSON *retjson; 
+    bits256 pubkey,privkey;
     if ( remoteaddr != 0 )
         return(clonestr("{\"error\":\"no remote\"}"));
     retjson = cJSON_CreateObject();
@@ -1562,7 +1486,11 @@ ZERO_ARGS(SuperNET,keypair)
 
 TWOHASHES_AND_STRING(SuperNET,decipher,privkey,srcpubkey,cipherstr)
 {
-    int32_t cipherlen=0,msglen; char *retstr; cJSON *retjson; void *ptr = 0; uint8_t *cipher,*message,space[8192];
+    int32_t cipherlen=0,msglen; 
+    char *retstr; 
+    cJSON *retjson; 
+    void *ptr = 0; 
+    uint8_t *cipher,*message,space[8192];
     if ( remoteaddr != 0 )
         return(clonestr("{\"error\":\"no remote\"}"));
     if ( cipherstr != 0 )
@@ -1586,8 +1514,12 @@ TWOHASHES_AND_STRING(SuperNET,decipher,privkey,srcpubkey,cipherstr)
 
 TWOHASHES_AND_STRING(SuperNET,cipher,privkey,destpubkey,message)
 {
-    cJSON *retjson; char *retstr,*hexstr,space[8129]; uint8_t space2[8129];
-    uint8_t *cipher; int32_t cipherlen,onetimeflag; bits256 origprivkey; void *ptr = 0;
+    cJSON *retjson; 
+    char *retstr,*hexstr,space[8129]; 
+    uint8_t space2[8129];
+    uint8_t *cipher; 
+    int32_t cipherlen,onetimeflag; 
+    bits256 origprivkey; void *ptr = 0;
     if ( remoteaddr != 0 )
         return(clonestr("{\"error\":\"no remote\"}"));
     if ( (cipher= SuperNET_ciphercalc(&ptr,&cipherlen,&privkey,&destpubkey,(uint8_t *)message,(int32_t)strlen(message)+1,space2,sizeof(space2))) != 0 )
@@ -1601,7 +1533,6 @@ TWOHASHES_AND_STRING(SuperNET,cipher,privkey,destpubkey,message)
         onetimeflag = memcmp(origprivkey.bytes,privkey.bytes,sizeof(privkey));
         if ( onetimeflag != 0 )
         {
-            //jaddbits256(retjson,"onetime_privkey",privkey);
             jaddbits256(retjson,"onetime_pubkey",destpubkey);
             if ( onetimeflag == 2 )
                 jaddstr(retjson,"warning","onetime keypair was used to broadcast");
@@ -1734,12 +1665,10 @@ STRING_ARG(SuperNET,getpeers,activecoin)
         max = SuperNET_coinpeers(coin,SNjson,rawjson,max);
     else
     {
-        //portable_mutex_lock(&myinfo->allcoins_mutex);
         HASH_ITER(hh,myinfo->allcoins,coin,tmp)
         {
             max = SuperNET_coinpeers(coin,SNjson,rawjson,max);
         }
-        //portable_mutex_unlock(&myinfo->allcoins_mutex);
     }
     if ( max != 64 )
     {
@@ -1757,15 +1686,6 @@ STRING_ARG(SuperNET,getpeers,activecoin)
     return(jprint(retjson,1));
 }
 
-/*TWOSTRINGS_AND_TWOHASHES_AND_TWOINTS(SuperNET,DHT,hexmsg,destip,categoryhash,subhash,maxdelay,broadcast)
- {
- if ( remoteaddr != 0 )
- return(clonestr("{\"error\":\"cant remote DHT\"}"));
- else if ( hexmsg == 0 || is_hexstr(hexmsg,(int32_t)strlen(hexmsg)) <= 0 )
- return(clonestr("{\"error\":\"hexmsg missing or not in hex\"}"));
- return(SuperNET_DHTencode(myinfo,destip,categoryhash,subhash,hexmsg,maxdelay,broadcast,juint(json,"plaintext")!=0));
- }*/
-
 HASH_AND_STRING(SuperNET,saveconf,wallethash,confjsonstr)
 {
     if ( remoteaddr != 0 )
@@ -1779,74 +1699,6 @@ HASH_ARRAY_STRING(SuperNET,layer,mypriv,otherpubs,str)
         return(clonestr("{\"error\":\"no remote\"}"));
     return(clonestr("{\"result\":\"layer encrypt here\"}"));
 }
-
-/*TWO_STRINGS(SuperNET,categoryhashes,category,subcategory)
-{
-    bits256 categoryhash,subhash; cJSON *retjson = cJSON_CreateObject();
-    if ( remoteaddr != 0 )
-        return(clonestr("{\"error\":\"no remote\"}"));
-    categoryhash = calc_categoryhashes(&subhash,category,subcategory);
-    jaddstr(retjson,"result","category hashes calculated");
-    jaddbits256(retjson,"categoryhash",categoryhash);
-    jaddbits256(retjson,"subhash",subhash);
-    return(jprint(retjson,1));
-}
-
-TWO_STRINGS(SuperNET,subscribe,category,subcategory)
-{
-    bits256 categoryhash,subhash;
-    if ( remoteaddr != 0 )
-        return(clonestr("{\"error\":\"no remote\"}"));
-    categoryhash = calc_categoryhashes(&subhash,category,subcategory);
-    if ( category_subscribe(myinfo,categoryhash,subhash) != 0 )
-        return(clonestr("{\"result\":\"subscribed\"}"));
-    else return(clonestr("{\"error\":\"couldnt subscribe\"}"));
-}
-
-TWO_STRINGS(SuperNET,gethexmsg,category,subcategory)
-{
-    bits256 categoryhash,subhash; struct category_msg *m; char *hexstr; cJSON *retjson; struct private_chain *cat;
-    if ( remoteaddr != 0 )
-        return(clonestr("{\"error\":\"no remote\"}"));
-    categoryhash = calc_categoryhashes(&subhash,category,subcategory);
-    if ( (m= category_gethexmsg(myinfo,&cat,categoryhash,subhash)) != 0 )
-    {
-        hexstr = calloc(1,m->len*2+1);
-        init_hexbytes_noT(hexstr,m->msg,m->len);
-        retjson = cJSON_CreateObject();
-        jaddstr(retjson,"result",hexstr);
-        free(hexstr);
-        return(jprint(retjson,1));
-    } else return(clonestr("{\"result\":\"no message\"}"));
-}
-
-THREE_STRINGS(SuperNET,posthexmsg,category,subcategory,hexmsg)
-{
-    bits256 categoryhash,subhash;
-    if ( remoteaddr != 0 )
-        return(clonestr("{\"error\":\"no remote\"}"));
-    categoryhash = calc_categoryhashes(&subhash,category,subcategory);
-    category_posthexmsg(myinfo,categoryhash,subhash,hexmsg,tai_now(),remoteaddr);
-    return(clonestr("{\"result\":\"posted message\"}"));
-}
-
-THREE_STRINGS(SuperNET,announce,category,subcategory,message)
-{
-    bits256 categoryhash,subhash;
-    if ( remoteaddr != 0 )
-        return(clonestr("{\"error\":\"no remote\"}"));
-    categoryhash = calc_categoryhashes(&subhash,category,subcategory);
-    return(SuperNET_categorymulticast(myinfo,0,categoryhash,subhash,message,juint(json,"maxdelay"),juint(json,"broadcast"),juint(json,"plaintext"),json,remoteaddr));
-}
-
-THREE_STRINGS(SuperNET,survey,category,subcategory,message)
-{
-    bits256 categoryhash,subhash;
-    if ( remoteaddr != 0 )
-        return(clonestr("{\"error\":\"no remote\"}"));
-    categoryhash = calc_categoryhashes(&subhash,category,subcategory);
-    return(SuperNET_categorymulticast(myinfo,1,categoryhash,subhash,message,juint(json,"maxdelay"),juint(json,"broadcast"),juint(json,"plaintext"),json,remoteaddr));
-}*/
 
 STRING_ARG(SuperNET,wif2priv,wif)
 {
@@ -1991,7 +1843,6 @@ struct supernet_info *SuperNET_accountfind(cJSON *json)
                 SuperNET_setkeys(&M,0,0,0);
                 if ( (myinfo = SuperNET_MYINFOfind(&num,M.myaddr.persistent)) != 0 )
                 {
-                    //printf("found account.(%s) %s %llu\n",myinfo!=0?myinfo->handle:"",M.myaddr.NXTADDR,(long long)M.myaddr.nxt64bits);
                     return(myinfo);
                 }
             }
@@ -2000,7 +1851,6 @@ struct supernet_info *SuperNET_accountfind(cJSON *json)
                 SuperNET_setkeys(&M,passphrase,(int32_t)strlen(passphrase),1);
                 if ( (myinfo= SuperNET_MYINFOfind(&num,M.myaddr.persistent)) != 0 )
                 {
-                    //printf("found account.(%s) %s %llu\n",myinfo!=0?myinfo->handle:"",M.myaddr.NXTADDR,(long long)M.myaddr.nxt64bits);
                     return(myinfo);
                 }
             } else printf("no passphrase in (%s)\n",jprint(json,0));
@@ -2021,20 +1871,14 @@ FOUR_STRINGS(SuperNET,login,handle,password,permanentfile,passphrase)
     else memset(myinfo->handle,0,sizeof(myinfo->handle));
     if ( password == 0 || password[0] == 0 )
         password = passphrase;
-    /*if ( password != 0 && password[0] != 0 )
-     safecopy(myinfo->secret,password,sizeof(myinfo->secret));
-     else if ( passphrase != 0 && passphrase[0] != 0 )
-     safecopy(myinfo->secret,passphrase,sizeof(myinfo->secret));*/
     if ( permanentfile != 0 )
         safecopy(myinfo->permanentfile,permanentfile,sizeof(myinfo->permanentfile));
     if ( (decryptstr= SuperNET_decryptjson(IGUANA_CALLARGS,password,myinfo->permanentfile)) != 0 )
     {
-        //printf("decryptstr.(%s)\n",decryptstr);
         if ( (argjson= cJSON_Parse(decryptstr)) != 0 )
         {
             if ( jobj(argjson,"error") == 0 )
             {
-                //printf("decrypted.(%s) exp.%u pass.(%s)\n",decryptstr,myinfo->expiration,password);
                 if ( myinfo->decryptstr != 0 )
                     free(myinfo->decryptstr);
                 myinfo->decryptstr = decryptstr;
@@ -2099,7 +1943,12 @@ FOUR_STRINGS(SuperNET,login,handle,password,permanentfile,passphrase)
 
 void komodo_ICO_batch(cJSON *array,int32_t batchid)
 {
-    int32_t i,n,iter; cJSON *item; uint64_t kmdamount,revsamount; char *coinaddr,cmd[512]; double totalKMD,totalREVS; struct supernet_info *myinfo = SuperNET_MYINFO(0);
+    int32_t i,n,iter; 
+    cJSON *item; 
+    uint64_t kmdamount,revsamount; 
+    char *coinaddr,cmd[512]; 
+    double totalKMD,totalREVS; 
+    struct supernet_info *myinfo = SuperNET_MYINFO(0);
     if ( myinfo->rpcport == 0 )
         myinfo->rpcport = 7778;
     if ( (n= cJSON_GetArraySize(array)) > 0 )
@@ -2109,7 +1958,8 @@ void komodo_ICO_batch(cJSON *array,int32_t batchid)
         for (i=0; i<n; i++)
         {
             item = jitem(array,i);
-            if ( (coinaddr= jstr(item,"kmd_address")) != 0 && (kmdamount= SATOSHIDEN * jdouble(item,"kmd_amount")) > 0 )
+            if ( (coinaddr= jstr(item,"kmd_address")) != 0 
+                    && (kmdamount= SATOSHIDEN * jdouble(item,"kmd_amount")) > 0 )
             {
                 if ( (revsamount= SATOSHIDEN * jdouble(item,"revs_amount")) > 0 )
                 {
@@ -2120,7 +1970,8 @@ void komodo_ICO_batch(cJSON *array,int32_t batchid)
                     {
                         if ( dstr(revsamount) >= 1. && (iter & 1) == 0 )
                         {
-                            printf("curl --url \"http://127.0.0.1:%u\" --data \"{\\\"agent\\\":\\\"dex\\\",\\\"method\\\":\\\"importaddress\\\",\\\"address\\\":\\\"%s\\\",\\\"symbol\\\":\\\"REVS\\\"}\" # %.8f\n",myinfo->rpcport,coinaddr,dstr(revsamount));
+                            printf("curl --url \"http://127.0.0.1:%u\" --data \"{\\\"agent\\\":\\\"dex\\\",\\\"method\\\":\\\"importaddress\\\",\\\"address\\\":\\\"%s\\\",\\\"symbol\\\":\\\"REVS\\\"}\" # %.8f\n",
+                                    myinfo->rpcport,coinaddr,dstr(revsamount));
                             printf("sleep 3\n");
                         } else printf("sleep 1\n");
                         if ( (iter & 1) != 0 )
@@ -2164,7 +2015,9 @@ void komodo_ICO_batch(cJSON *array,int32_t batchid)
 
 void komodo_REVS_merge(char *str,char *str2)
 {
-    char line[1024],line2[1024],*coinaddr; int32_t i,n=0,m=0,k=0; struct supernet_info *myinfo = SuperNET_MYINFO(0);
+    char line[1024],line2[1024],*coinaddr; 
+    int32_t i,n=0,m=0,k=0; 
+    struct supernet_info *myinfo = SuperNET_MYINFO(0);
     while ( 1 )
     {
         if ( str[n] == 0 || str2[m] == 0 )
@@ -2177,9 +2030,7 @@ void komodo_REVS_merge(char *str,char *str2)
             line2[i] = str2[m];
         line2[i] = 0;
         m++;
-        //if ( is_hexstr(line2,0) != 64 )
         {
-            //printf("%d: (%s) (%s)\n",k,line,line2);
             coinaddr = &line[strlen("fiat/revs sendtoaddress ")];
             for (i=0; coinaddr[i]!=' '; i++)
                 ;
@@ -2304,15 +2155,6 @@ void iguana_main(void *arg)
     myinfo->tradingexchanges[myinfo->numexchanges++] = exchange_create(clonestr("btce"),0);
     myinfo->tradingexchanges[myinfo->numexchanges++] = exchange_create(clonestr("bitstamp"),0);
 #endif
-    if ( myinfo->IAMNOTARY == 0 )
-    {
-        if ( iguana_commandline(myinfo,arg) == 0 )
-        {
-#ifdef __APPLE__
-            iguana_appletests(myinfo);
-#endif
-        }
-    }
     iguana_launchdaemons(myinfo);
 }
 

@@ -849,7 +849,6 @@ void iguana_startconnection(void *arg)
         iguana_iAconnected(coin,addr);
         printf("%s.PEER CONNECTED.%d:%d of max.%d! %s:%d usock.%d\n",coin->symbol,coin->peers->numconnected,n,coin->MAXPEERS,addr->ipaddr,coin->chain->portp2p,addr->usock);
 #ifdef IGUANA_DEDICATED_THREADS
-        //iguana_launch("recv",iguana_dedicatedrecv,addr,IGUANA_RECVTHREAD);
         iguana_dedicatedloop(SuperNET_MYINFO(0),coin,addr);
 #endif
     }
